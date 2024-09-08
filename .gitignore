@@ -1,1 +1,3 @@
-service.env
+*.env
+docker-compose.yml
+linters.sh
