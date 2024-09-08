@@ -14,6 +14,14 @@ type Service struct {
 	Host string `env:"SOCIETY_SERVICE_HOST"`
 }
 
+type Postgres struct {
+	User     string `env:"SOCIETY_SERVICE_POSTGRES_USER"`
+	Password string `env:"SOCIETY_SERVICE_POSTGRES_PASSWORD"`
+	Database string `env:"SOCIETY_SERVICE_POSTGRES_DB"`
+	Host     string `env:"SOCIETY_SERVICE_POSTGRES_HOST"`
+	Port     string `env:"SOCIETY_SERVICE_POSTGRES_PORT"`
+}
+
 func MustLoad() *Config {
 	cfg := &Config{}
 	err := cleanenv.ReadEnv(cfg)
