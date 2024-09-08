@@ -14,7 +14,7 @@ type Service struct {
 	Host string `env:"SOCIETY_SERVICE_HOST"`
 }
 
-type ReadEnvBD struct {
+type Postgres struct {
 	User     string `env:"SOCIETY_SERVICE_POSTGRES_USER"`
 	Password string `env:"SOCIETY_SERVICE_POSTGRES_PASSWORD"`
 	Database string `env:"SOCIETY_SERVICE_POSTGRES_DB"`
