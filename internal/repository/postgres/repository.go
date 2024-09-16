@@ -1,8 +1,8 @@
 package postgres
 
 import (
-	"database/sql"
 	"fmt"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/s21platform/society-service/internal/config"
 	"log"
@@ -10,7 +10,7 @@ import (
 )
 
 type Repository struct {
-	connection *sql.DB
+	connection *sqlx.DB
 }
 
 func connect(cfg *config.Config) (*Repository, error) {
@@ -18,14 +18,9 @@ func connect(cfg *config.Config) (*Repository, error) {
 	conStr := fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s sslmode=disable",
 		cfg.Postgres.User, cfg.Postgres.Password, cfg.Postgres.Database, cfg.Postgres.Host, cfg.Postgres.Port)
 
-	db, err := sql.Open("postgres", conStr)
+	db, err := sqlx.Connect("postgres", conStr)
 	if err != nil {
 		return nil, fmt.Errorf("sql.Open: %w", err)
-	}
-
-	// Сhecking connection db
-	if err = db.Ping(); err != nil {
-		return nil, fmt.Errorf("db.Ping: %w", err)
 	}
 
 	return &Repository{db}, nil
