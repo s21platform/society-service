@@ -6,7 +6,8 @@ import (
 )
 
 type Config struct {
-	Service Service
+	Service  Service
+	Postgres Postgres
 }
 
 type Service struct {
