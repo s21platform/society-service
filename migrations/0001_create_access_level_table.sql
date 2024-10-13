@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS access_level (
-                                         id PRIMARY KEY,
+                                         id SERIAL PRIMARY KEY,
                                          level_name VARCHAR(100),
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
