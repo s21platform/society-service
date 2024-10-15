@@ -35,12 +35,12 @@ jobs:
             docker pull ${{ secrets.CR_REGISTRY }}/${{ secrets.CR_NAME }}-migrate:develop
             case "${{ github.event.inputs.action }}" in
             apply_one_version)
-            docker-compose -f ~/space21/staging/migrations/friends-service.yml --env-file ~/space21/staging/.env up -d friends-service-migrate-up-one-dev
+            docker-compose -f ~/space21/staging/migrations/society-service.yml --env-file ~/space21/staging/.env up -d society-service-migrate-up-one-dev
             ;;
             apply_all_versions)
-            docker-compose -f ~/space21/staging/migrations/friends-service.yml --env-file ~/space21/staging/.env up -d friends-service-migrate-up-all-dev
+            docker-compose -f ~/space21/staging/migrations/society-service.yml --env-file ~/space21/staging/.env up -d society-service-migrate-up-all-dev
             ;;
             rollback_one_version)
-            docker-compose -f ~/space21/staging/migrations/friends-service.yml --env-file ~/space21/staging/.env up -d friends-service-migrate-down-one-dev
+            docker-compose -f ~/space21/staging/migrations/society-service.yml --env-file ~/space21/staging/.env up -d society-service-migrate-down-one-dev
             ;;
             esac

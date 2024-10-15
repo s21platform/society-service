@@ -10,8 +10,8 @@ jobs:
     name: Run linters
     runs-on: ubuntu-latest
     env:
-      GO_PATHS_CMD: cmd/service cmd/workers/notification
-      GO_PATHS_INTERNAL: internal/config internal/repository/db internal/repository/kafka/consumer/user_new_peer internal/repository/kafka/producer/notification_new_user internal/service
+      GO_PATHS_CMD: cmd/service
+      GO_PATHS_INTERNAL: internal/config internal/repository/postgres
 
     steps:
       - name: Checkout code
