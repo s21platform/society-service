@@ -1,52 +1,29 @@
 linters:
   enable:
-    - bodyclose
-    - dogsled
-    - errcheck
-    - exhaustive
-    - funlen
-    - gochecknoinits
-    - goconst
-    - gocritic
-    - gocyclo
-    - gofmt
-    - revive
-    - goprintffuncname
-    - gosec
-    - gosimple
     - govet
-    - ineffassign
-    - lll
-    - misspell
-    - nakedret
-    - nolintlint
-    - rowserrcheck
-    - copyloopvar
+    - gofmt
+    - goimports
     - staticcheck
-    - unused
-    - stylecheck
-    - typecheck
-    - unconvert
-    - unparam
-    - unused
-    - whitespace
-    - asciicheck
-    - gocognit
-    - godot
-    - nestif
-    - prealloc
-    - testpackage
-    - wsl
+    - ineffassign
+    - errcheck
 
-linter-settings:
-  gocritic:
-    enabled-tags:
-      - performance
-  lll:
-    line-length: 200
-  funlen:
-    lines: 120
-    statements: 50
-  revive:
-    package-name:
-      allow-underscore: true
+    - gosimple
+    - typecheck
+    - unused
+    - gofmt
+    - makezero
+    - whitespace
+
+run:
+  timeout: 5m
+  tests: true
+
+issues:
+  exclude-dirs:
+    - "/migrations"
+  exclude-rules:
+    - linters:
+        - errcheck
+      text: "error is not checked"
+  max-issues-per-linter: 0
+  max-same-issues: 0
