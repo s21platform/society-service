@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/s21platform/society-service/internal/config"
-	db "github.com/s21platform/society-service/internal/repository/postgres"
 	"log"
 	"os"
+
+	"github.com/s21platform/society-service/internal/config"
+	db "github.com/s21platform/society-service/internal/repository/postgres"
 )
 
 func main() {
