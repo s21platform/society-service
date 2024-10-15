@@ -8,10 +8,10 @@
         direction_id INT NOT NULL,
         owner_id INT NOT NULL,
         photo_url TEXT,
-        access_level VARCHAR(50) NOT NULL REFERENCES access_level(id),
+        access_id VARCHAR(50) NOT NULL REFERENCES access_level(id),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
+    );
 -- +goose StatementEnd
 
 -- +goose Down
