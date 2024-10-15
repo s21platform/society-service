@@ -1,0 +1,52 @@
+linters:
+  enable:
+    - bodyclose
+    - dogsled
+    - errcheck
+    - exhaustive
+    - funlen
+    - gochecknoinits
+    - goconst
+    - gocritic
+    - gocyclo
+    - gofmt
+    - revive
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - lll
+    - misspell
+    - nakedret
+    - nolintlint
+    - rowserrcheck
+    - copyloopvar
+    - staticcheck
+    - unused
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - whitespace
+    - asciicheck
+    - gocognit
+    - godot
+    - nestif
+    - prealloc
+    - testpackage
+    - wsl
+
+linter-settings:
+  gocritic:
+    enabled-tags:
+      - performance
+  lll:
+    line-length: 200
+  funlen:
+    lines: 120
+    statements: 50
+  revive:
+    package-name:
+      allow-underscore: true
