@@ -9,10 +9,6 @@ jobs:
   linters:
     name: Run linters
     runs-on: ubuntu-latest
-    env:
-      GO_PATHS_CMD: cmd/service
-      GO_PATHS_INTERNAL: internal/config internal/repository/postgres
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -26,7 +22,7 @@ jobs:
         run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
       - name: Run golangci-lint
-        run: golangci-lint run --config=.golangci.yml ${{ env.GO_PATHS_CMD }} ${{ env.GO_PATHS_INTERNAL }}
+        run: golangci-lint run
 
   test:
     name: Run tests
