@@ -1,6 +1,6 @@
 module github.com/s21platform/society-service
 
-go 1.23.1
+go 1.22.8
 
 require (
 	github.com/ilyakaznacheev/cleanenv v1.5.0
