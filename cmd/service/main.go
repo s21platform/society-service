@@ -2,15 +2,17 @@ package main
 
 import (
 	"fmt"
-	society "github.com/s21platform/society-proto/society-proto"
-	"github.com/s21platform/society-service/internal/rpc"
-	"google.golang.org/grpc"
 	"log"
 	"net"
 	"os"
 
+	"google.golang.org/grpc"
+
+	society "github.com/s21platform/society-proto/society-proto"
+
 	"github.com/s21platform/society-service/internal/config"
 	db "github.com/s21platform/society-service/internal/repository/postgres"
+	"github.com/s21platform/society-service/internal/rpc"
 )
 
 func main() {
