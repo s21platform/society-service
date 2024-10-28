@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"fmt"
+	"github.com/s21platform/society-service/internal/model"
 	"log"
 	"time"
 
@@ -47,4 +48,17 @@ func New(cfg *config.Config) (*Repository, error) {
 
 func (r *Repository) Close() {
 	r.connection.Close()
+}
+
+func (r *Repository) CreateGroup(socData *model.SocietyData) (int, error) {
+	tx, err := r.connection.Beginx()
+	if err != nil {
+		return 0, err
+	}
+	var lastId int
+	err = tx.QueryRowx("INSERT INTO societies(name, description, is_private, direction_id, access_level) VALUES ($1,$2,$3,$4,$5) RETURNING id", socData.Name, socData.Description, socData.IsPrivate, socData.DirectionId, socData.AccessLevelId).Scan(&lastId)
+	if err != nil {
+		return 0, err
+	}
+	return lastId, nil
 }
