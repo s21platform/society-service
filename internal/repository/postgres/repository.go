@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/s21platform/society-service/internal/model"
+
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // Импортируем данную библиотеку для работы с бд.
 	"github.com/s21platform/society-service/internal/config"
@@ -47,4 +49,13 @@ func New(cfg *config.Config) (*Repository, error) {
 
 func (r *Repository) Close() {
 	r.connection.Close()
+}
+
+func (r *Repository) CreateGroup(socData *model.SocietyData) (int, error) {
+	var lastId int
+	err := r.connection.QueryRowx("INSERT INTO societies(name, description, is_private, direction_id, access_level) VALUES ($1,$2,$3,$4,$5) RETURNING id", socData.Name, socData.Description, socData.IsPrivate, socData.DirectionId, socData.AccessLevelId).Scan(&lastId)
+	if err != nil {
+		return 0, err
+	}
+	return lastId, nil
 }

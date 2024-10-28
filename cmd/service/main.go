@@ -27,7 +27,7 @@ func main() {
 	}
 	defer dbRepo.Close()
 
-	server := rpc.New()
+	server := rpc.New(dbRepo)
 	s := grpc.NewServer()
 	society.RegisterSocietyServiceServer(s, server)
 
