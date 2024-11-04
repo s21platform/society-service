@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/s21platform/society-service/internal/infra"
 	"log"
 	"net"
 	"os"
@@ -28,7 +29,11 @@ func main() {
 	defer dbRepo.Close()
 
 	server := rpc.New(dbRepo)
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			infra.UnaryInterceptor,
+		),
+	)
 	society.RegisterSocietyServiceServer(s, server)
 
 	log.Println("starting server", cfg.Service.Port)
