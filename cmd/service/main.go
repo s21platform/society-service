@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/s21platform/society-service/internal/infra"
 	"log"
 	"net"
 	"os"
@@ -30,9 +29,7 @@ func main() {
 
 	server := rpc.New(dbRepo)
 	s := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(
-			infra.UnaryInterceptor,
-		),
+		grpc.ChainUnaryInterceptor(),
 	)
 	society.RegisterSocietyServiceServer(s, server)
 
