@@ -2,6 +2,7 @@ package infra
 
 import (
 	"context"
+
 	"github.com/s21platform/society-service/internal/config"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
