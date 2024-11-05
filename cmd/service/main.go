@@ -28,7 +28,9 @@ func main() {
 	defer dbRepo.Close()
 
 	server := rpc.New(dbRepo)
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(),
+	)
 	society.RegisterSocietyServiceServer(s, server)
 
 	log.Println("starting server", cfg.Service.Port)
