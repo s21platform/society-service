@@ -33,3 +33,22 @@ func (s *Server) CreateSociety(ctx context.Context, in *society.SetSocietyIn) (*
 	out := &society.SetSocietyOut{SocietyId: int64(id)}
 	return out, err
 }
+
+func (s *Server) GetAccessLevel(context.Context, *society.Empty) (*society.GetAccessLevelOut, error) {
+	accessLevel := model.AccessLevelData{}
+	err := s.dbR.GetAccessLevel(&accessLevel)
+	if err != nil {
+		return nil, err
+	}
+
+	out := &society.GetAccessLevelOut{
+		Levels: make([]*society.AccessLevel, len(accessLevel.AccessLevel)),
+	}
+	for i, level := range accessLevel.AccessLevel {
+		out.Levels[i] = &society.AccessLevel{
+			Id:          level.Id,
+			AccessLevel: level.AccessLevel,
+		}
+	}
+	return out, err
+}

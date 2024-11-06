@@ -7,3 +7,12 @@ type SocietyData struct {
 	DirectionId   int64
 	AccessLevelId int64
 }
+
+type AccessLevel struct {
+	Id          int64
+	AccessLevel string
+}
+
+type AccessLevelData struct {
+	AccessLevel []AccessLevel
+}
