@@ -39,7 +39,7 @@ func (s *Server) GetAccessLevel(context.Context, *society.Empty) (*society.GetAc
 	accessLevel := model.AccessLevelData{}
 	err := s.dbR.GetAccessLevel(&accessLevel)
 	if err != nil {
-		return nil, fmt.Errorf("s.dbR.GetAccessLevel ", err)
+		return nil, fmt.Errorf("s.dbR.GetAccessLevel %v", err)
 	}
 
 	out := &society.GetAccessLevelOut{
