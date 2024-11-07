@@ -9,8 +9,8 @@ type SocietyData struct {
 }
 
 type AccessLevel struct {
-	Id          int64
-	AccessLevel string
+	Id          int64  `db:"id"`
+	AccessLevel string `db:"level_name"`
 }
 
 type AccessLevelData struct {
