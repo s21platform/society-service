@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"context"
+	"fmt"
 
 	society "github.com/s21platform/society-proto/society-proto"
 	"github.com/s21platform/society-service/internal/model"
@@ -38,7 +39,7 @@ func (s *Server) GetAccessLevel(context.Context, *society.Empty) (*society.GetAc
 	accessLevel := model.AccessLevelData{}
 	err := s.dbR.GetAccessLevel(&accessLevel)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("s.dbR.GetAccessLevel ", err)
 	}
 
 	out := &society.GetAccessLevelOut{

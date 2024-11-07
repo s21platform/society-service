@@ -63,5 +63,5 @@ func (r *Repository) CreateGroup(socData *model.SocietyData) (int, error) {
 func (r *Repository) GetAccessLevel(data *model.AccessLevelData) error {
 	err := r.connection.Select(&data.AccessLevel, "SELECT id, level_name FROM access_level")
 
-	return err
+	return fmt.Errorf("r.connection.Select: ", err)
 }
