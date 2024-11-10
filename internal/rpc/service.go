@@ -47,7 +47,6 @@ func (s *Server) GetAccessLevel(context.Context, *society.Empty) (*society.GetAc
 	for i := range data.AccessLevel {
 		out.Levels[i].Id = data.AccessLevel[i].Id
 		out.Levels[i].AccessLevel = data.AccessLevel[i].AccessLevel
-
 	}
 
 	return &out, err
