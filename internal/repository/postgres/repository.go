@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"fmt"
+	society "github.com/s21platform/society-proto/society-proto"
 	"log"
 	"time"
 
@@ -60,11 +61,12 @@ func (r *Repository) CreateGroup(socData *model.SocietyData) (int, error) {
 	return lastId, nil
 }
 
-func (r *Repository) GetAccessLevel() (*model.AccessLevelData, error) {
-	accesData := model.AccessLevelData{}
-	err := r.connection.Select(&accesData.AccessLevel, "SELECT id, level_name FROM access_level")
+func (r *Repository) GetAccessLevel() (*society.GetAccessLevelOut, error) {
+	accesData := society.GetAccessLevelOut{}
+	err := r.connection.Select(&accesData.Levels, "SELECT id, level_name FROM access_level")
 	if err != nil {
 		return nil, fmt.Errorf("r.connection.Query: %v", err)
 	}
+
 	return &accesData, nil
 }
