@@ -6,5 +6,5 @@ import (
 
 type DbRepo interface {
 	CreateGroup(socData *model.SocietyData) (int, error)
-	GetAccessLevel(data *model.AccessLevelData) error
+	GetAccessLevel() (*model.AccessLevelData, error)
 }

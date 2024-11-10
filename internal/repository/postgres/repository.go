@@ -60,27 +60,11 @@ func (r *Repository) CreateGroup(socData *model.SocietyData) (int, error) {
 	return lastId, nil
 }
 
-func (r *Repository) GetAccessLevel(data *model.AccessLevelData) error {
-	dataArray := make([]model.AccessLevel, 0)
-
-	rows, err := r.connection.Query("SELECT id, level_name FROM access_level")
+func (r *Repository) GetAccessLevel() (*model.AccessLevelData, error) {
+	accesData := model.AccessLevelData{}
+	err := r.connection.Select(&accesData.AccessLevel, "SELECT id, level_name FROM access_level")
 	if err != nil {
-		return fmt.Errorf("r.connection.Query: %v", err)
+		return nil, fmt.Errorf("r.connection.Query: %v", err)
 	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var accessLevel model.AccessLevel
-		if err := rows.Scan(&accessLevel.Id, &accessLevel.AccessLevel); err != nil {
-			return fmt.Errorf("rows.Scan: %v", err)
-		}
-		dataArray = append(dataArray, accessLevel)
-	}
-
-	if err := rows.Err(); err != nil {
-		return fmt.Errorf("rows.Err: %v", err)
-	}
-
-	data.AccessLevel = dataArray
-	return nil
+	return &accesData, nil
 }

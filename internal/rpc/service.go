@@ -36,20 +36,18 @@ func (s *Server) CreateSociety(ctx context.Context, in *society.SetSocietyIn) (*
 }
 
 func (s *Server) GetAccessLevel(context.Context, *society.Empty) (*society.GetAccessLevelOut, error) {
-	accessLevel := model.AccessLevelData{}
-	err := s.dbR.GetAccessLevel(&accessLevel)
+	data, err := s.dbR.GetAccessLevel()
 	if err != nil {
 		return nil, fmt.Errorf("s.dbR.GetAccessLevel %v", err)
 	}
 
-	out := &society.GetAccessLevelOut{
-		Levels: make([]*society.AccessLevel, len(accessLevel.AccessLevel)),
+	out := society.GetAccessLevelOut{
+		Levels: make([]*society.AccessLevel, len(data.AccessLevel)),
 	}
-	for i, level := range accessLevel.AccessLevel {
-		out.Levels[i] = &society.AccessLevel{
-			Id:          level.Id,
-			AccessLevel: level.AccessLevel,
-		}
+	for i, _ := range data.AccessLevel {
+		out.Levels[i].Id = data.AccessLevel[i].Id
+		out.Levels[i].AccessLevel = data.AccessLevel[i].AccessLevel
+
 	}
-	return out, err
+	return &out, err
 }
