@@ -2,9 +2,10 @@ package postgres
 
 import (
 	"fmt"
-	society "github.com/s21platform/society-proto/society-proto"
 	"log"
 	"time"
+
+	society "github.com/s21platform/society-proto/society-proto"
 
 	"github.com/s21platform/society-service/internal/model"
 
