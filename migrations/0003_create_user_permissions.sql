@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS user_permissions
     id BIGINT PRIMARY KEY,
     name TEXT,
     description TEXT,
-    created_at TIMESTAMP
+    created_at TIMESTAMP DEFAULT NOW()
 );
 -- +goose StatementEnd
 
