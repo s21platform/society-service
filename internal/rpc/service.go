@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"context"
+	"fmt"
 
 	society "github.com/s21platform/society-proto/society-proto"
 	"github.com/s21platform/society-service/internal/model"
@@ -32,4 +33,24 @@ func (s *Server) CreateSociety(ctx context.Context, in *society.SetSocietyIn) (*
 	}
 	out := &society.SetSocietyOut{SocietyId: int64(id)}
 	return out, err
+}
+
+func (s *Server) GetAccessLevel(context.Context, *society.Empty) (*society.GetAccessLevelOut, error) {
+	data, err := s.dbR.GetAccessLevel()
+	if err != nil {
+		return nil, fmt.Errorf("s.dbR.GetAccessLevel %v", err)
+	}
+
+	out := society.GetAccessLevelOut{
+		Levels: make([]*society.AccessLevel, len(data.AccessLevel)),
+	}
+	for i := range data.AccessLevel {
+		level := &society.AccessLevel{
+			Id:          data.AccessLevel[i].Id,
+			AccessLevel: data.AccessLevel[i].AccessLevel,
+		}
+		out.Levels[i] = level
+	}
+
+	return &out, err
 }
