@@ -62,14 +62,14 @@ func (s *Server) GetPermissions(context.Context, *society.EmptySociety) (*societ
 	}
 
 	out := society.GetPermissionsOut{
-		Permissions: make([]*society.GetPermissions, len(data.GetPermissions)),
+		Permissions: make([]*society.Permission, len(data.GetPermissions)),
 	}
 
 	for i := range data.GetPermissions {
-		level := &society.GetPermissions{
-			id:          data.GetPermissions[i].Id,
-			name:        data.GetPermissions[i].Name,
-			description: data.GetPermissions[i].Description,
+		level := &society.Permission{
+			Id:          data.GetPermissions[i].Id,
+			Name:        data.GetPermissions[i].Name,
+			Description: data.GetPermissions[i].Description,
 		}
 		out.Permissions[i] = level
 	}
