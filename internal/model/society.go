@@ -16,3 +16,13 @@ type AccessLevel struct {
 type AccessLevelData struct {
 	AccessLevel []AccessLevel
 }
+
+type GetPermissions struct {
+	Id          int64  `db:"id"`
+	Name        string `db:"name"`
+	Description string `db:"description"`
+}
+
+type GetPermissionsData struct {
+	GetPermissions []GetPermissions
+}
