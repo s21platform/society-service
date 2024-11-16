@@ -70,12 +70,12 @@ func (r *Repository) GetAccessLevel() (*model.AccessLevelData, error) {
 	return &accesData, nil
 }
 
-func (r *Repository) GetPermissions() (*model.GetPermissionsData, error) {
-	getData := model.GetPermissionsData{}
-	err := r.connection.Select(&getData.GetPermissions, "SELECT id, name, description FROM user_permissions")
+func (r *Repository) GetPermissions() (*[]model.GetPermissions, error) {
+	data := []model.GetPermissions{}
+	err := r.connection.Select(data, "SELECT id, name, description FROM user_permissions")
 	if err != nil {
-		return nil, fmt.Errorf("r.connection.Query: %v", err)
+		return nil, fmt.Errorf("failed to get permission: %v", err)
 	}
 
-	return &getData, nil
+	return &data, nil
 }

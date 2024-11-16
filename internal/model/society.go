@@ -22,7 +22,3 @@ type GetPermissions struct {
 	Name        string `db:"name"`
 	Description string `db:"description"`
 }
-
-type GetPermissionsData struct {
-	GetPermissions []GetPermissions
-}

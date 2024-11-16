@@ -58,20 +58,20 @@ func (s *Server) GetAccessLevel(context.Context, *society.Empty) (*society.GetAc
 func (s *Server) GetPermissions(context.Context, *society.EmptySociety) (*society.GetPermissionsOut, error) {
 	data, err := s.dbR.GetPermissions()
 	if err != nil {
-		return nil, fmt.Errorf("s.dbR.GetPermissions %v", err)
+		return nil, fmt.Errorf("failed to get permission: %v", err)
 	}
 
 	out := society.GetPermissionsOut{
-		Permissions: make([]*society.Permission, len(data.GetPermissions)),
+		Permissions: make([]*society.Permission, len(*data)),
 	}
 
-	for i := range data.GetPermissions {
+	for a, i := range *data {
 		level := &society.Permission{
-			Id:          data.GetPermissions[i].Id,
-			Name:        data.GetPermissions[i].Name,
-			Description: data.GetPermissions[i].Description,
+			Id:          i.Id,
+			Name:        i.Name,
+			Description: i.Description,
 		}
-		out.Permissions[i] = level
+		out.Permissions[a] = level
 	}
 
 	return &out, err
