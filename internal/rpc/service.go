@@ -3,6 +3,7 @@ package rpc
 import (
 	"context"
 	"fmt"
+
 	"google.golang.org/grpc/metadata"
 
 	society "github.com/s21platform/society-proto/society-proto"
