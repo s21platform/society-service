@@ -5,6 +5,7 @@ type SocietyData struct {
 	Description   string
 	IsPrivate     bool
 	DirectionId   int64
+	OwnerId       string
 	AccessLevelId int64
 }
 
