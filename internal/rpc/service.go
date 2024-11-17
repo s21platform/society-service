@@ -35,7 +35,7 @@ func (s *Server) CreateSociety(ctx context.Context, in *society.SetSocietyIn) (*
 	return out, err
 }
 
-func (s *Server) GetAccessLevel(context.Context, *society.Empty) (*society.GetAccessLevelOut, error) {
+func (s *Server) GetAccessLevel(context.Context, *society.EmptySociety) (*society.GetAccessLevelOut, error) {
 	data, err := s.dbR.GetAccessLevel()
 	if err != nil {
 		return nil, fmt.Errorf("s.dbR.GetAccessLevel %v", err)
