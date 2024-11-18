@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"google.golang.org/grpc/metadata"
+	"github.com/s21platform/society-service/internal/config"
 
 	society "github.com/s21platform/society-proto/society-proto"
 	"github.com/s21platform/society-service/internal/model"
@@ -21,18 +21,18 @@ func New(repo DbRepo) *Server {
 	}
 }
 func (s *Server) CreateSociety(ctx context.Context, in *society.SetSocietyIn) (*society.SetSocietyOut, error) {
-	_ = ctx
-	md, ok := metadata.FromIncomingContext(ctx)
+	uuid, ok := ctx.Value(config.KeyUUID).(string)
+
 	if !ok {
 		return nil, fmt.Errorf("uuid not found in metadata")
 	}
-	userID := md["uuid"]
+
 	SocietyData := model.SocietyData{
 		Name:          in.Name,
 		Description:   in.Description,
 		IsPrivate:     in.IsPrivate,
 		DirectionId:   in.DirectionId,
-		OwnerId:       userID[0],
+		OwnerId:       uuid,
 		AccessLevelId: in.AccessLevelId,
 	}
 	id, err := s.dbR.CreateGroup(&SocietyData)
