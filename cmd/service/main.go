@@ -6,6 +6,8 @@ import (
 	"net"
 	"os"
 
+	"github.com/s21platform/society-service/internal/infra"
+
 	"google.golang.org/grpc"
 
 	society "github.com/s21platform/society-proto/society-proto"
@@ -29,7 +31,9 @@ func main() {
 
 	server := rpc.New(dbRepo)
 	s := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(),
+		grpc.ChainUnaryInterceptor(
+			infra.UnaryInterceptor,
+		),
 	)
 	society.RegisterSocietyServiceServer(s, server)
 
