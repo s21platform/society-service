@@ -24,7 +24,7 @@ func (s *Server) CreateSociety(ctx context.Context, in *society.SetSocietyIn) (*
 	uuid, ok := ctx.Value(config.KeyUUID).(string)
 
 	if !ok {
-		return nil, fmt.Errorf("uuid not found in coxtex")
+		return nil, fmt.Errorf("uuid not found in context")
 	}
 
 	SocietyData := model.SocietyData{
