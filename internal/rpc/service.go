@@ -22,7 +22,6 @@ func New(repo DbRepo) *Server {
 }
 func (s *Server) CreateSociety(ctx context.Context, in *society.SetSocietyIn) (*society.SetSocietyOut, error) {
 	uuid, ok := ctx.Value(config.KeyUUID).(string)
-
 	if !ok {
 		return nil, fmt.Errorf("uuid not found in context")
 	}

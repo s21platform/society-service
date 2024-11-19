@@ -32,7 +32,7 @@ func main() {
 	server := rpc.New(dbRepo)
 	s := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
-			infra.UnaryInterceptor,
+			infra.Verifcation,
 		),
 	)
 	society.RegisterSocietyServiceServer(s, server)

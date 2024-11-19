@@ -9,6 +9,6 @@ ALTER TABLE societies ADD COLUMN owner_uuid UUID;
 
 -- +goose Down
 -- +goose StatementBegin
-ALTER TABLE societies ADD COLUMN owner_uuid UUID;
-ALTER TABLE societies DROP COLUMN owner_id;
+ALTER TABLE societies DROP COLUMN ownet_uuid;
+ALTER TABLE societies ADD COLUMN owner_id INT;
 -- +goose StatementEnd
