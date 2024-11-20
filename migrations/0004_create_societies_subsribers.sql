@@ -14,3 +14,4 @@ CREATE TABLE IF NOT EXISTS societies_subscribers
 -- +goose StatementBegin
 DROP TABLE IF EXISTS societies_subscribers;
 -- +goose StatementEnd
+
