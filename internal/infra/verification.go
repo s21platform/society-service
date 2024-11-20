@@ -10,10 +10,9 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func Verifcation(
+func UnaryInterceptor(
 	ctx context.Context,
 	req interface{},
-	info *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler,
 ) (interface{}, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
