@@ -50,14 +50,14 @@ func (s *Server) GetAccessLevel(context.Context, *society.EmptySociety) (*societ
 	}
 
 	out := society.GetAccessLevelOut{
-		Levels: make([]*society.AccessLevel, len(data.AccessLevel)),
+		Levels: make([]*society.AccessLevel, len(*data)),
 	}
-	for i := range data.AccessLevel {
+	for j, i := range *data {
 		level := &society.AccessLevel{
-			Id:          data.AccessLevel[i].Id,
-			AccessLevel: data.AccessLevel[i].AccessLevel,
+			Id:          i.Id,
+			AccessLevel: i.AccessLevel,
 		}
-		out.Levels[i] = level
+		out.Levels[j] = level
 	}
 
 	return &out, err

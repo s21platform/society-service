@@ -66,14 +66,14 @@ func (r *Repository) CreateGroup(socData *model.SocietyData) (int, error) {
 	return lastId, nil
 }
 
-func (r *Repository) GetAccessLevel() (*model.AccessLevelData, error) {
-	accesData := model.AccessLevelData{}
-	err := r.connection.Select(&accesData.AccessLevel, "SELECT id, level_name FROM access_level")
+func (r *Repository) GetAccessLevel() (*[]model.AccessLevel, error) {
+	var data []model.AccessLevel
+	err := r.connection.Select(&data, "SELECT id, level_name FROM access_level")
 	if err != nil {
-		return nil, fmt.Errorf("r.connection.Query: %v", err)
+		return nil, fmt.Errorf("r.connection.Select: %v", err)
 	}
 
-	return &accesData, nil
+	return &data, nil
 }
 
 func (r *Repository) GetPermissions() (*[]model.GetPermissions, error) {
