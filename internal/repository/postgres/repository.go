@@ -53,7 +53,13 @@ func (r *Repository) Close() {
 
 func (r *Repository) CreateGroup(socData *model.SocietyData) (int, error) {
 	var lastId int
-	err := r.connection.QueryRowx("INSERT INTO societies(name, description, is_private, direction_id, access_level) VALUES ($1,$2,$3,$4,$5) RETURNING id", socData.Name, socData.Description, socData.IsPrivate, socData.DirectionId, socData.AccessLevelId).Scan(&lastId)
+	err := r.connection.QueryRowx("INSERT INTO societies(name, description, is_private, direction_id, owner_uuid, access_id) VALUES ($1,$2,$3,$4,$5, $6) RETURNING id",
+		socData.Name,
+		socData.Description,
+		socData.IsPrivate,
+		socData.DirectionId,
+		socData.OwnerId,
+		socData.AccessLevelId).Scan(&lastId)
 	if err != nil {
 		return 0, err
 	}
@@ -71,8 +77,8 @@ func (r *Repository) GetAccessLevel() (*model.AccessLevelData, error) {
 }
 
 func (r *Repository) GetPermissions() (*[]model.GetPermissions, error) {
-	data := []model.GetPermissions{}
-	err := r.connection.Select(data, "SELECT id, name, description FROM user_permissions")
+	var data []model.GetPermissions
+	err := r.connection.Select(&data, "SELECT id, name, description FROM user_permissions")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get permission: %v", err)
 	}

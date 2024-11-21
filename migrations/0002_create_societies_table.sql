@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS societies
     description  TEXT                    NOT NULL,
     is_private   BOOLEAN   DEFAULT FALSE NOT NULL,
     direction_id INT                     NOT NULL,
-    owner_id     INT                     NOT NULL,
+    owner_uuid   UUID                    NOT NULL,
     photo_url    TEXT,
     access_id    INT                     NOT NULL REFERENCES access_level (id),
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

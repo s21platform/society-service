@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/s21platform/society-service/internal/config"
+
 	society "github.com/s21platform/society-proto/society-proto"
 	"github.com/s21platform/society-service/internal/model"
 )
@@ -19,11 +21,17 @@ func New(repo DbRepo) *Server {
 	}
 }
 func (s *Server) CreateSociety(ctx context.Context, in *society.SetSocietyIn) (*society.SetSocietyOut, error) {
+	uuid, ok := ctx.Value(config.KeyUUID).(string)
+	if !ok {
+		return nil, fmt.Errorf("uuid not found in context")
+	}
+
 	SocietyData := model.SocietyData{
 		Name:          in.Name,
 		Description:   in.Description,
 		IsPrivate:     in.IsPrivate,
 		DirectionId:   in.DirectionId,
+		OwnerId:       uuid,
 		AccessLevelId: in.AccessLevelId,
 	}
 	id, err := s.dbR.CreateGroup(&SocietyData)
@@ -35,7 +43,7 @@ func (s *Server) CreateSociety(ctx context.Context, in *society.SetSocietyIn) (*
 	return out, err
 }
 
-func (s *Server) GetAccessLevel(context.Context, *society.Empty) (*society.GetAccessLevelOut, error) {
+func (s *Server) GetAccessLevel(context.Context, *society.EmptySociety) (*society.GetAccessLevelOut, error) {
 	data, err := s.dbR.GetAccessLevel()
 	if err != nil {
 		return nil, fmt.Errorf("s.dbR.GetAccessLevel %v", err)
