@@ -88,7 +88,7 @@ func (r *Repository) GetPermissions() (*[]model.GetPermissions, error) {
 
 func (r *Repository) GetSocietyWithOffset(socData *model.WithOffsetData) (*[]model.SocietyWithOffsetData, error) {
 	var data []model.SocietyWithOffsetData
-	query := "select name, photo_url avatar_link, s.id society_id, ss.user_uuid = $1 isMember" +
+	query := "select name, photo_url avatar_link, s.id society_id, ss.user_uuid = $1 is_member" +
 		"  FROM societies s JOIN societies_subscribers ss ON s.id = ss.society_id " +
 		"WHERE s.description ILIKE $2 OFFSET $3 LIMIT $4"
 	err := r.connection.Select(&data, query, socData.Uuid, "%"+socData.Name+"%", socData.Offset, socData.Limit)

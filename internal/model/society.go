@@ -30,10 +30,10 @@ type SocietyWithOffset struct {
 }
 
 type SocietyWithOffsetData struct {
-	Name       string
-	AvatarLink string
-	SocietyId  int64
-	IsMember   bool
+	Name       string `db:"name"`
+	AvatarLink string `db:"avatar_link"`
+	SocietyId  int64  `db:"society_id"`
+	IsMember   bool   `db:"is_member"`
 }
 
 type WithOffsetData struct {
