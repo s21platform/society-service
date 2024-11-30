@@ -53,12 +53,13 @@ func (r *Repository) Close() {
 
 func (r *Repository) CreateGroup(socData *model.SocietyData) (int, error) {
 	var lastId int
-	err := r.connection.QueryRowx("INSERT INTO societies(name, description, is_private, direction_id, owner_uuid, access_id) VALUES ($1,$2,$3,$4,$5, $6) RETURNING id",
+	err := r.connection.QueryRowx("INSERT INTO societies(name, description, is_private, direction_id, owner_uuid, photo_url, access_id) VALUES ($1,$2,$3,$4,$5, $6, $7) RETURNING id",
 		socData.Name,
 		socData.Description,
 		socData.IsPrivate,
 		socData.DirectionId,
 		socData.OwnerId,
+		"https://storage.yandexcloud.net/space21/avatars/default/logo-discord.jpeg",
 		socData.AccessLevelId).Scan(&lastId)
 	if err != nil {
 		return 0, err
