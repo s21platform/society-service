@@ -23,3 +23,22 @@ type GetPermissions struct {
 	Name        string `db:"name"`
 	Description string `db:"description"`
 }
+
+type SocietyWithOffset struct {
+	Society []SocietyWithOffsetData
+	Total   int64
+}
+
+type SocietyWithOffsetData struct {
+	Name       string
+	AvatarLink string
+	SocietyId  int64
+	IsMember   bool
+}
+
+type WithOffsetData struct {
+	Limit  int64
+	Offset int64
+	Name   string
+	Uuid   string
+}

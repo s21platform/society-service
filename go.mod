@@ -6,8 +6,8 @@ require (
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/lib/pq v1.10.9
-	github.com/s21platform/society-proto v0.0.8
-	google.golang.org/grpc v1.67.1
+	github.com/s21platform/society-proto v0.0.13
+	google.golang.org/grpc v1.68.0
 )
 
 require (

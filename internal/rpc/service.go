@@ -84,3 +84,37 @@ func (s *Server) GetPermissions(context.Context, *society.EmptySociety) (*societ
 
 	return &out, err
 }
+
+func (s *Server) GetSocietyWithOffset(ctx context.Context, in *society.GetSocietyWithOffsetIn) (*society.GetSocietyWithOffsetOut, error) {
+	uuid, ok := ctx.Value(config.KeyUUID).(string)
+	if !ok {
+		return nil, fmt.Errorf("uuid not found in context")
+	}
+
+	withOffsetData := model.WithOffsetData{
+		Limit:  in.Limit,
+		Offset: in.Offset,
+		Name:   in.Name,
+		Uuid:   uuid,
+	}
+	data, err := s.dbR.GetSocietyWithOffset(&withOffsetData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get society with offset: %v", err)
+	}
+
+	out := society.GetSocietyWithOffsetOut{
+		Society: make([]*society.Society, len(*data)),
+		Total:   int64(len(*data)),
+	}
+	for j, i := range *data {
+		level := &society.Society{
+			Name:       i.Name,
+			AvatarLink: i.AvatarLink,
+			SocietyId:  i.SocietyId,
+			IsMember:   i.IsMember,
+		}
+		out.Society[j] = level
+	}
+
+	return &out, err
+}
