@@ -103,3 +103,13 @@ func (r *Repository) GetSocietyWithOffset(socData *model.WithOffsetData) (*[]mod
 
 	return &data, err
 }
+
+func (r *Repository) GetSocietyInfo(id int64) (*model.SocietyInfo, error) {
+	var data model.SocietyInfo
+	err := r.connection.Select(&data, "SELECT name, description, owner_uuid, photo_url, is_private FROM societies WHERE id = $1", id)
+	if err != nil {
+		return nil, fmt.Errorf("r.connection.Select: %v", err)
+	}
+
+	return &data, nil
+}
