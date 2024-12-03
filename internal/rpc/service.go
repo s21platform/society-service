@@ -118,3 +118,19 @@ func (s *Server) GetSocietyWithOffset(ctx context.Context, in *society.GetSociet
 
 	return &out, err
 }
+
+func (s *Server) GetSocietyInfo(ctx context.Context, in *society.GetSocietyInfoIn) (*society.GetSocietyInfoOut, error) {
+	data, err := s.dbR.GetSocietyInfo(in.Id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get society info: %v", err)
+	}
+
+	out := society.GetSocietyInfoOut{
+		Name:        data.Name,
+		Description: data.Description,
+		OwnerUUID:   data.OwnerId,
+		PhotoUrl:    data.PhotoUrl,
+		IsPrivate:   data.IsPrivate,
+	}
+	return &out, err
+}

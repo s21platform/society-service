@@ -9,4 +9,5 @@ type DbRepo interface {
 	GetAccessLevel() (*[]model.AccessLevel, error)
 	GetPermissions() (*[]model.GetPermissions, error)
 	GetSocietyWithOffset(data *model.WithOffsetData) (*[]model.SocietyWithOffsetData, error)
+	GetSocietyInfo(id int64) (*model.SocietyInfo, error)
 }
