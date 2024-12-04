@@ -114,3 +114,11 @@ func (r *Repository) GetSocietyInfo(id int64) (*model.SocietyInfo, error) {
 
 	return &data, nil
 }
+
+func (r *Repository) SubscribeToSociety(id int64, uuid string) (bool, error) {
+	if _, err := r.connection.Exec("INSERT INTO societies_subscribers (society_id, user_uuid) VALUES ($1, $2)", id, uuid); err != nil {
+		return false, fmt.Errorf("r.connection.Exec: %v", err)
+	}
+
+	return true, nil
+}
