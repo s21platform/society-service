@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS societies_subscribers
 (
-    id BIGINT PRIMARY KEY,
+    id BIGINT SERIAL PRIMARY KEY,
     society_id BIGINT NOT NULL,
     user_uuid UUID NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
