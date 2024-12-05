@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS user_permissions
 (
-    id BIGINT SERIAL PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     name TEXT,
     description TEXT,
     created_at TIMESTAMP DEFAULT NOW()
