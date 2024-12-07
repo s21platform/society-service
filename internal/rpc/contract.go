@@ -10,4 +10,5 @@ type DbRepo interface {
 	GetPermissions() (*[]model.GetPermissions, error)
 	GetSocietyWithOffset(data *model.WithOffsetData) (*[]model.SocietyWithOffsetData, error)
 	GetSocietyInfo(id int64) (*model.SocietyInfo, error)
+	SubscribeToSociety(id int64, uuid string) (bool, error)
 }

@@ -134,3 +134,20 @@ func (s *Server) GetSocietyInfo(ctx context.Context, in *society.GetSocietyInfoI
 	}
 	return &out, err
 }
+
+func (s *Server) SubscribeToSociety(ctx context.Context, in *society.SubscribeToSocietyIn) (*society.SubscribeToSocietyOut, error) {
+	uuid, ok := ctx.Value(config.KeyUUID).(string)
+	if !ok {
+		return nil, fmt.Errorf("uuid not found in context")
+	}
+
+	data, err := s.dbR.SubscribeToSociety(in.SocietyId, uuid)
+	if err != nil {
+		return nil, fmt.Errorf("failed to subcribe to society %v", err)
+	}
+
+	out := society.SubscribeToSocietyOut{
+		Success: data,
+	}
+	return &out, err
+}
