@@ -151,3 +151,20 @@ func (s *Server) SubscribeToSociety(ctx context.Context, in *society.SubscribeTo
 	}
 	return &out, err
 }
+
+func (s *Server) UnsubscribeFromSociety(ctx context.Context, in *society.UnsubscribeFromSocietyIn) (*society.UnsubscribeFromSocietyOut, error) {
+	uuid, ok := ctx.Value(config.KeyUUID).(string)
+	if !ok {
+		return nil, fmt.Errorf("uuid not found in context")
+	}
+
+	data, err := s.dbR.UnsubscribeFromSociety(in.SocietyId, uuid)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unsubcribe to society %v", err)
+	}
+
+	out := society.UnsubscribeFromSocietyOut{
+		Success: data,
+	}
+	return &out, err
+}
