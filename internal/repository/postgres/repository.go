@@ -122,3 +122,11 @@ func (r *Repository) SubscribeToSociety(id int64, uuid string) (bool, error) {
 
 	return true, nil
 }
+
+func (r *Repository) UnsubscribeFromSociety(id int64, uuid string) (bool, error) {
+	if _, err := r.connection.Exec("DELETE FROM societies_subscribers WHERE society_id = $1 AND user_uuid = $2", id, uuid); err != nil {
+		return false, fmt.Errorf("r.connection.Exec: %v", err)
+	}
+
+	return true, nil
+}
