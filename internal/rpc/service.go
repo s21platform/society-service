@@ -3,6 +3,7 @@ package rpc
 import (
 	"context"
 	"fmt"
+
 	"github.com/s21platform/society-service/internal/config"
 
 	society "github.com/s21platform/society-proto/society-proto"
