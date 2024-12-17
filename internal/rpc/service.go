@@ -3,8 +3,6 @@ package rpc
 import (
 	"context"
 	"fmt"
-	"strings"
-
 	"github.com/s21platform/society-service/internal/config"
 
 	society "github.com/s21platform/society-proto/society-proto"
@@ -143,12 +141,7 @@ func (s *Server) SubscribeToSociety(ctx context.Context, in *society.SubscribeTo
 	}
 
 	data, err := s.dbR.SubscribeToSociety(in.SocietyId, uuid)
-	if strings.Contains(err.Error(), "user already subscribed to this society") {
-		out := society.SubscribeToSocietyOut{
-			Success: false,
-		}
-		return &out, nil
-	} else if err != nil {
+	if err != nil {
 		return nil, fmt.Errorf("failed to subcribe to society %v", err)
 	}
 
