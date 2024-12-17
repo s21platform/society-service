@@ -1,7 +1,6 @@
 package postgres
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -121,7 +120,7 @@ func (r *Repository) SubscribeToSociety(id int64, uuid string) (bool, error) {
 	_, err := r.connection.Exec("INSERT INTO societies_subscribers (society_id, user_uuid) VALUES ($1, $2)", id, uuid)
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
-			return false, errors.New("user already subscribed to this society")
+			return false, nil
 		}
 		return false, fmt.Errorf("r.connection.Exec: %v", err)
 	}
