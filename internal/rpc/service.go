@@ -147,7 +147,7 @@ func (s *Server) SubscribeToSociety(ctx context.Context, in *society.SubscribeTo
 		out := society.SubscribeToSocietyOut{
 			Success: false,
 		}
-		return &out, err
+		return &out, nil
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to subcribe to society %v", err)
 	}
