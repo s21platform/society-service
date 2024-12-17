@@ -50,3 +50,8 @@ type SocietyInfo struct {
 	PhotoUrl    string `db:"photo_url"`
 	IsPrivate   bool   `db:"is_private"`
 }
+
+type UsersForSociety struct {
+	Name       string `db:"name"`
+	AvatarLink string `db:"avatar_link"`
+}
