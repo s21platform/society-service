@@ -54,4 +54,9 @@ type SocietyInfo struct {
 type UsersForSociety struct {
 	Name       string `db:"name"`
 	AvatarLink string `db:"avatar_link"`
+	Uuid       string `db:"uuid"`
+}
+
+type IdSociety struct {
+	ID int64 `db:"society_id"`
 }
