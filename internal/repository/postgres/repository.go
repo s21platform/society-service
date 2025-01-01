@@ -130,7 +130,7 @@ func (r *Repository) SubscribeToSociety(id int64, uuid string) (bool, error) {
 
 func (r *Repository) UnsubscribeFromSociety(id int64, uuid string) (bool, error) {
 	var data []model.IdSociety
-	err := r.connection.Select(&data, "SELECT id FROM societies_subscribers WHERE id = $1 AND user_uuid = $2", id, uuid)
+	err := r.connection.Select(&data, "SELECT society_id FROM societies_subscribers WHERE society_id = $1 AND user_uuid = $2", id, uuid)
 	if err != nil {
 		return false, fmt.Errorf("failed to select subscribe from society: %v", err)
 	}
