@@ -12,4 +12,5 @@ type DbRepo interface {
 	GetSocietyInfo(id int64) (*model.SocietyInfo, error)
 	SubscribeToSociety(id int64, uuid string) (bool, error)
 	UnsubscribeFromSociety(id int64, uuid string) (bool, error)
+	GetSocietiesForUser(uuid string) (*[]model.SocietyWithOffsetData, error)
 }

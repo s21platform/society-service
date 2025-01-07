@@ -90,7 +90,7 @@ func (r *Repository) GetPermissions() (*[]model.GetPermissions, error) {
 
 func (r *Repository) GetSocietyWithOffset(socData *model.WithOffsetData) (*[]model.SocietyWithOffsetData, error) {
 	var data []model.SocietyWithOffsetData
-	query := "SELECT name, photo_url avatar_link, s.id society_id, " +
+	query := "SELECT name, photo_url, s.id society_id, " +
 		"CASE WHEN ss.user_uuid = $1 THEN true ELSE false END AS is_member " +
 		"FROM societies s " +
 		"LEFT JOIN societies_subscribers ss ON s.id = ss.society_id AND ss.user_uuid = $1 " +
@@ -142,4 +142,14 @@ func (r *Repository) UnsubscribeFromSociety(id int64, uuid string) (bool, error)
 	}
 
 	return true, nil
+}
+
+func (r *Repository) GetSocietiesForUser(uuid string) (*[]model.SocietyWithOffsetData, error) {
+	var data []model.SocietyWithOffsetData
+	err := r.connection.Select(&data, "SELECT name, photo_url, ss.id AS id, is_private FROM societies s JOIN societies_subscribers ss ON s.id = ss.society_id WHERE user_uuid = $1", uuid)
+	if err != nil {
+		return nil, fmt.Errorf("failed to select societies for user: %v", err)
+	}
+
+	return &data, nil
 }

@@ -31,9 +31,10 @@ type SocietyWithOffset struct {
 
 type SocietyWithOffsetData struct {
 	Name       string `db:"name"`
-	AvatarLink string `db:"avatar_link"`
+	AvatarLink string `db:"photo_url"`
 	SocietyId  int64  `db:"society_id"`
 	IsMember   bool   `db:"is_member"`
+	IsPrivate  bool   `db:"is_private"`
 }
 
 type WithOffsetData struct {
@@ -59,4 +60,9 @@ type UsersForSociety struct {
 
 type IdSociety struct {
 	ID int64 `db:"society_id"`
+}
+
+type SocietiesForUser struct {
+	Name        string `db:"name"`
+	Description string `db:"description"`
 }

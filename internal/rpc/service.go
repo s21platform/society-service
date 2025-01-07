@@ -168,3 +168,24 @@ func (s *Server) UnsubscribeFromSociety(ctx context.Context, in *society.Unsubsc
 	}
 	return &out, err
 }
+
+func (s *Server) GetSocietiesForUser(ctx context.Context, in *society.GetSocietiesForUserIn) (*society.GetSocietiesForUserOut, error) {
+	data, err := s.dbR.GetSocietiesForUser(in.UserUuid)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get society for user: %v", err)
+	}
+
+	out := society.GetSocietiesForUserOut{
+		Society: make([]*society.Society, len(*data)),
+	}
+	for j, i := range *data {
+		level := &society.Society{
+			Name:       i.Name,
+			AvatarLink: i.AvatarLink,
+			SocietyId:  i.SocietyId,
+			IsPrivate:  i.IsPrivate,
+		}
+		out.Society[j] = level
+	}
+	return &out, err
+}
