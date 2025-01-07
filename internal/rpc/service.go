@@ -170,7 +170,11 @@ func (s *Server) UnsubscribeFromSociety(ctx context.Context, in *society.Unsubsc
 }
 
 func (s *Server) GetSocietiesForUser(ctx context.Context, in *society.GetSocietiesForUserIn) (*society.GetSocietiesForUserOut, error) {
-	data, err := s.dbR.GetSocietiesForUser(in.UserUuid)
+	uuid, ok := ctx.Value(config.KeyUUID).(string)
+	if !ok {
+		return nil, fmt.Errorf("uuid not found in context")
+	}
+	data, err := s.dbR.GetSocietiesForUser(uuid, in.UserUuid)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get society for user: %v", err)
 	}
@@ -183,6 +187,7 @@ func (s *Server) GetSocietiesForUser(ctx context.Context, in *society.GetSocieti
 			Name:       i.Name,
 			AvatarLink: i.AvatarLink,
 			SocietyId:  i.SocietyId,
+			IsMember:   i.IsMember,
 			IsPrivate:  i.IsPrivate,
 		}
 		out.Society[j] = level

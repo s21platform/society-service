@@ -144,9 +144,9 @@ func (r *Repository) UnsubscribeFromSociety(id int64, uuid string) (bool, error)
 	return true, nil
 }
 
-func (r *Repository) GetSocietiesForUser(uuid string) (*[]model.SocietyWithOffsetData, error) {
+func (r *Repository) GetSocietiesForUser(uuid string, uuidUser string) (*[]model.SocietyWithOffsetData, error) {
 	var data []model.SocietyWithOffsetData
-	err := r.connection.Select(&data, "SELECT name, photo_url, ss.id AS society_id, is_private FROM societies s JOIN societies_subscribers ss ON s.id = ss.society_id WHERE user_uuid = $1", uuid)
+	err := r.connection.Select(&data, "SELECT name, photo_url, ss.id AS society_id, user_uuid = $1 as is_member, is_private FROM societies s JOIN societies_subscribers ss ON s.id = ss.society_id WHERE user_uuid = $2", uuid, uuidUser)
 	if err != nil {
 		return nil, fmt.Errorf("failed to select societies for user: %v", err)
 	}
