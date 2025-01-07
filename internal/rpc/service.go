@@ -97,14 +97,14 @@ func (s *Server) GetSocietyWithOffset(ctx context.Context, in *society.GetSociet
 		Name:   in.Name,
 		Uuid:   uuid,
 	}
-	data, err := s.dbR.GetSocietyWithOffset(&withOffsetData)
+	data, count, err := s.dbR.GetSocietyWithOffset(&withOffsetData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get society with offset: %v", err)
 	}
 
 	out := society.GetSocietyWithOffsetOut{
 		Society: make([]*society.Society, len(*data)),
-		Total:   int64(len(*data)),
+		Total:   count,
 	}
 	for j, i := range *data {
 		level := &society.Society{
