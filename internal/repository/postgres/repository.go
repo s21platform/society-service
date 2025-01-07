@@ -88,7 +88,7 @@ func (r *Repository) GetPermissions() (*[]model.GetPermissions, error) {
 	return &data, nil
 }
 
-func (r *Repository) GetSocietyWithOffset(socData *model.WithOffsetData) (*[]model.SocietyWithOffsetData, int, error) {
+func (r *Repository) GetSocietyWithOffset(socData *model.WithOffsetData) (*[]model.SocietyWithOffsetData, int64, error) {
 	var data []model.SocietyWithOffsetData
 	query := "SELECT name, photo_url, s.id society_id, " +
 		"CASE WHEN ss.user_uuid = $1 THEN true ELSE false END AS is_member " +
@@ -96,7 +96,7 @@ func (r *Repository) GetSocietyWithOffset(socData *model.WithOffsetData) (*[]mod
 		"LEFT JOIN societies_subscribers ss ON s.id = ss.society_id AND ss.user_uuid = $1 " +
 		"WHERE ($2 = '' OR name ILIKE $2) "
 
-	var count int
+	var count int64
 	err := r.connection.Select(&count, query, socData.Uuid, "%"+socData.Name+"%")
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to get count society with offset: %v", err)
