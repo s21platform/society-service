@@ -88,8 +88,22 @@ func (r *Repository) GetPermissions() (*[]model.GetPermissions, error) {
 	return &data, nil
 }
 
-func (r *Repository) GetSocietyWithOffset(socData *model.WithOffsetData) (*[]model.SocietyWithOffsetData, int64, error) {
+func (r *Repository) GetSocietyWithOffset(socData *model.WithOffsetData) (*[]model.SocietyWithOffsetData, error) {
 	var data []model.SocietyWithOffsetData
+	query := "SELECT name, photo_url, s.id society_id, " +
+		"CASE WHEN ss.user_uuid = $1 THEN true ELSE false END AS is_member " +
+		"FROM societies s " +
+		"LEFT JOIN societies_subscribers ss ON s.id = ss.society_id AND ss.user_uuid = $1 " +
+		"WHERE ($2 = '' OR name ILIKE $2) "
+
+	err := r.connection.Select(&data, query+"OFFSET $3 LIMIT $4", socData.Uuid, "%"+socData.Name+"%", socData.Offset, socData.Limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get society with offset: %v", err)
+	}
+	return &data, err
+}
+
+func (r *Repository) GetCountSocietyWithOffset(socData *model.WithOffsetData) (int64, error) {
 	var count int64
 	query := "SELECT name, photo_url, s.id society_id, " +
 		"CASE WHEN ss.user_uuid = $1 THEN true ELSE false END AS is_member " +
@@ -98,19 +112,13 @@ func (r *Repository) GetSocietyWithOffset(socData *model.WithOffsetData) (*[]mod
 		"WHERE ($2 = '' OR name ILIKE $2) "
 
 	queryCount := "with test as  (" + query + ")" +
-		"select count(*) from test"
+		"SELECT count(*) FROM test"
 
 	err := r.connection.Get(&count, queryCount, socData.Uuid, "%"+socData.Name+"%")
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to get count society with offset: %v", err)
+		return 0, fmt.Errorf("failed to get count society with offset: %v", err)
 	}
-	//"OFFSET $3 LIMIT $4"
-	err = r.connection.Select(&data, query+"OFFSET $3 LIMIT $4", socData.Uuid, "%"+socData.Name+"%", socData.Offset, socData.Limit)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to get society with offset: %v", err)
-	}
-
-	return &data, count, err
+	return count, nil
 }
 
 func (r *Repository) GetSocietyInfo(id int64) (*model.SocietyInfo, error) {
