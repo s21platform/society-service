@@ -90,23 +90,21 @@ func (r *Repository) GetPermissions() (*[]model.GetPermissions, error) {
 
 func (r *Repository) GetSocietyWithOffset(socData *model.WithOffsetData) (*[]model.SocietyWithOffsetData, int64, error) {
 	var data []model.SocietyWithOffsetData
+	var count int64
 	query := "SELECT name, photo_url, s.id society_id, " +
 		"CASE WHEN ss.user_uuid = $1 THEN true ELSE false END AS is_member " +
 		"FROM societies s " +
 		"LEFT JOIN societies_subscribers ss ON s.id = ss.society_id AND ss.user_uuid = $1 " +
 		"WHERE ($2 = '' OR name ILIKE $2) "
 
-	var count int64
-	err := r.connection.Select(&count, query, socData.Uuid, "%"+socData.Name+"%")
+	queryCount := "with test as  (" + query + ")" +
+		"select count(*) from test"
+
+	err := r.connection.Get(&count, queryCount, socData.Uuid, "%"+socData.Name+"%")
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to get count society with offset: %v", err)
 	}
-	//query := "SELECT name, photo_url, s.id society_id, " +
-	//	"CASE WHEN ss.user_uuid = $1 THEN true ELSE false END AS is_member " +
-	//	"FROM societies s " +
-	//	"LEFT JOIN societies_subscribers ss ON s.id = ss.society_id AND ss.user_uuid = $1 " +
-	//	"WHERE ($2 = '' OR name ILIKE $2) " +
-	//	"OFFSET $3 LIMIT $4"
+	//"OFFSET $3 LIMIT $4"
 	err = r.connection.Select(&data, query+"OFFSET $3 LIMIT $4", socData.Uuid, "%"+socData.Name+"%", socData.Offset, socData.Limit)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to get society with offset: %v", err)
