@@ -90,19 +90,35 @@ func (r *Repository) GetPermissions() (*[]model.GetPermissions, error) {
 
 func (r *Repository) GetSocietyWithOffset(socData *model.WithOffsetData) (*[]model.SocietyWithOffsetData, error) {
 	var data []model.SocietyWithOffsetData
-	query := "SELECT name, photo_url avatar_link, s.id society_id, " +
+	query := "SELECT name, photo_url, s.id society_id, " +
 		"CASE WHEN ss.user_uuid = $1 THEN true ELSE false END AS is_member " +
 		"FROM societies s " +
 		"LEFT JOIN societies_subscribers ss ON s.id = ss.society_id AND ss.user_uuid = $1 " +
-		"WHERE ($2 = '' OR name ILIKE $2) " +
-		"OFFSET $3 LIMIT $4"
+		"WHERE ($2 = '' OR name ILIKE $2) "
 
-	err := r.connection.Select(&data, query, socData.Uuid, "%"+socData.Name+"%", socData.Offset, socData.Limit)
+	err := r.connection.Select(&data, query+"OFFSET $3 LIMIT $4", socData.Uuid, "%"+socData.Name+"%", socData.Offset, socData.Limit)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get permission: %v", err)
+		return nil, fmt.Errorf("failed to get society with offset: %v", err)
 	}
-
 	return &data, err
+}
+
+func (r *Repository) GetCountSocietyWithOffset(socData *model.WithOffsetData) (int64, error) {
+	var count int64
+	query := "SELECT name, photo_url, s.id society_id, " +
+		"CASE WHEN ss.user_uuid = $1 THEN true ELSE false END AS is_member " +
+		"FROM societies s " +
+		"LEFT JOIN societies_subscribers ss ON s.id = ss.society_id AND ss.user_uuid = $1 " +
+		"WHERE ($2 = '' OR name ILIKE $2) "
+
+	queryCount := "with test as  (" + query + ")" +
+		"SELECT count(*) FROM test"
+
+	err := r.connection.Get(&count, queryCount, socData.Uuid, "%"+socData.Name+"%")
+	if err != nil {
+		return 0, fmt.Errorf("failed to get count society with offset: %v", err)
+	}
+	return count, nil
 }
 
 func (r *Repository) GetSocietyInfo(id int64) (*model.SocietyInfo, error) {
@@ -142,4 +158,14 @@ func (r *Repository) UnsubscribeFromSociety(id int64, uuid string) (bool, error)
 	}
 
 	return true, nil
+}
+
+func (r *Repository) GetSocietiesForUser(uuid string, uuidUser string) (*[]model.SocietyWithOffsetData, error) {
+	var data []model.SocietyWithOffsetData
+	err := r.connection.Select(&data, "SELECT name, photo_url, ss.id AS society_id, user_uuid = $1 as is_member, is_private FROM societies s JOIN societies_subscribers ss ON s.id = ss.society_id WHERE user_uuid = $2", uuid, uuidUser)
+	if err != nil {
+		return nil, fmt.Errorf("failed to select societies for user: %v", err)
+	}
+
+	return &data, nil
 }

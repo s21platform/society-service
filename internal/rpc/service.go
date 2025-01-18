@@ -101,10 +101,13 @@ func (s *Server) GetSocietyWithOffset(ctx context.Context, in *society.GetSociet
 	if err != nil {
 		return nil, fmt.Errorf("failed to get society with offset: %v", err)
 	}
-
+	count, err := s.dbR.GetCountSocietyWithOffset(&withOffsetData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get count society with offset: %v", err)
+	}
 	out := society.GetSocietyWithOffsetOut{
 		Society: make([]*society.Society, len(*data)),
-		Total:   int64(len(*data)),
+		Total:   count,
 	}
 	for j, i := range *data {
 		level := &society.Society{
@@ -165,6 +168,32 @@ func (s *Server) UnsubscribeFromSociety(ctx context.Context, in *society.Unsubsc
 
 	out := society.UnsubscribeFromSocietyOut{
 		Success: data,
+	}
+	return &out, err
+}
+
+func (s *Server) GetSocietiesForUser(ctx context.Context, in *society.GetSocietiesForUserIn) (*society.GetSocietiesForUserOut, error) {
+	uuid, ok := ctx.Value(config.KeyUUID).(string)
+	if !ok {
+		return nil, fmt.Errorf("uuid not found in context")
+	}
+	data, err := s.dbR.GetSocietiesForUser(uuid, in.UserUuid)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get society for user: %v", err)
+	}
+
+	out := society.GetSocietiesForUserOut{
+		Society: make([]*society.Society, len(*data)),
+	}
+	for j, i := range *data {
+		level := &society.Society{
+			Name:       i.Name,
+			AvatarLink: i.AvatarLink,
+			SocietyId:  i.SocietyId,
+			IsMember:   i.IsMember,
+			IsPrivate:  i.IsPrivate,
+		}
+		out.Society[j] = level
 	}
 	return &out, err
 }
