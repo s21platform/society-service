@@ -82,3 +82,49 @@ func TestServer_GetSocietiesForUser(t *testing.T) {
 		assert.EqualError(t, err, "failed to get society for user: db error")
 	})
 }
+
+func TestServer_GetSocietyInfo(t *testing.T) {
+	t.Parallel()
+
+	uuid := "test-uuid"
+	ctx := context.WithValue(context.Background(), config.KeyUUID, uuid)
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+	mockRepo := rpc.NewMockDbRepo(controller)
+
+	//userUuid := "user-uuid"
+	expectedSocieties := model.SocietyInfo{
+		Name:             "Society 1",
+		Description:      "This is a test society 1",
+		OwnerId:          "user-uuid",
+		PhotoUrl:         "https://example.com/avatar1",
+		IsPrivate:        true,
+		CountSubscribers: 5,
+	}
+	mockRepo.EXPECT().GetSocietyInfo(int64(1)).Return(&expectedSocieties, nil)
+
+	s := rpc.New(mockRepo)
+
+	t.Run("get_societies_info_ok", func(t *testing.T) {
+		in := &society.GetSocietyInfoIn{Id: 1}
+		out, err := s.GetSocietyInfo(ctx, in)
+		assert.NoError(t, err)
+		expectedOut := &society.GetSocietyInfoOut{
+			Name:             "Society 1",
+			Description:      "This is a test society 1",
+			OwnerUUID:        "user-uuid",
+			PhotoUrl:         "https://example.com/avatar1",
+			IsPrivate:        true,
+			CountSubscribers: 5,
+		}
+		assert.Equal(t, expectedOut, out)
+	})
+
+	t.Run("repository_error", func(t *testing.T) {
+		mockRepo.EXPECT().GetSocietyInfo(int64(1)).Return(nil, fmt.Errorf("db error"))
+		in := &society.GetSocietyInfoIn{Id: 1}
+		_, err := s.GetSocietyInfo(ctx, in)
+		assert.EqualError(t, err, "failed to get society info: db error")
+	})
+
+}

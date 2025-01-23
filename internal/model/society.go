@@ -45,11 +45,12 @@ type WithOffsetData struct {
 }
 
 type SocietyInfo struct {
-	Name        string `db:"name"`
-	Description string `db:"description"`
-	OwnerId     string `db:"owner_uuid"`
-	PhotoUrl    string `db:"photo_url"`
-	IsPrivate   bool   `db:"is_private"`
+	Name             string `db:"name"`
+	Description      string `db:"description"`
+	OwnerId          string `db:"owner_uuid"`
+	PhotoUrl         string `db:"photo_url"`
+	IsPrivate        bool   `db:"is_private"`
+	CountSubscribers int64  `db:"count_subscribers"`
 }
 
 type UsersForSociety struct {

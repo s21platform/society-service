@@ -7,7 +7,7 @@ require (
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/lib/pq v1.10.9
-	github.com/s21platform/society-proto v0.0.15
+	github.com/s21platform/society-proto v0.0.16
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/net v0.30.0
 	google.golang.org/grpc v1.68.0
