@@ -92,7 +92,6 @@ func TestServer_GetSocietyInfo(t *testing.T) {
 	defer controller.Finish()
 	mockRepo := rpc.NewMockDbRepo(controller)
 
-	//userUuid := "user-uuid"
 	expectedSocieties := model.SocietyInfo{
 		Name:             "Society 1",
 		Description:      "This is a test society 1",
