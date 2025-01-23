@@ -126,5 +126,4 @@ func TestServer_GetSocietyInfo(t *testing.T) {
 		_, err := s.GetSocietyInfo(ctx, in)
 		assert.EqualError(t, err, "failed to get society info: db error")
 	})
-
 }
