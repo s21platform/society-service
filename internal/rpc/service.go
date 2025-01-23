@@ -129,11 +129,12 @@ func (s *Server) GetSocietyInfo(ctx context.Context, in *society.GetSocietyInfoI
 	}
 
 	out := society.GetSocietyInfoOut{
-		Name:        data.Name,
-		Description: data.Description,
-		OwnerUUID:   data.OwnerId,
-		PhotoUrl:    data.PhotoUrl,
-		IsPrivate:   data.IsPrivate,
+		Name:             data.Name,
+		Description:      data.Description,
+		OwnerUUID:        data.OwnerId,
+		PhotoUrl:         data.PhotoUrl,
+		IsPrivate:        data.IsPrivate,
+		CountSubscribers: data.CountSubscribers,
 	}
 	return &out, err
 }

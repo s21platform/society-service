@@ -123,7 +123,14 @@ func (r *Repository) GetCountSocietyWithOffset(socData *model.WithOffsetData) (i
 
 func (r *Repository) GetSocietyInfo(id int64) (*model.SocietyInfo, error) {
 	var data model.SocietyInfo
-	query := "SELECT name, description, owner_uuid, photo_url, is_private FROM societies WHERE id = $1"
+	query := "SELECT name, " +
+		"description, " +
+		"owner_uuid, " +
+		"photo_url, " +
+		"is_private, " +
+		"COALESCE(count_s, 0) " +
+		"AS count_subscribers FROM societies s LEFT JOIN (SELECT society_id, count(*) AS count_s from societies_subscribers GROUP BY society_id) ss ON s.id = ss.society_id " +
+		"WHERE id = $1"
 	err := r.connection.Get(&data, query, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get society info: %v", err)
