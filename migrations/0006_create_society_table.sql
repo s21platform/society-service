@@ -1,7 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
 DROP TABLE IF EXISTS societies;
-
 -- +goose StatementEnd
 
 -- +goose StatementBegin
@@ -26,7 +25,6 @@ DROP TABLE IF EXISTS society;
 -- +goose StatementEnd
 
 -- +goose StatementBegin
-
 CREATE TABLE IF NOT EXISTS societies
 (
     id           SERIAL PRIMARY KEY,
@@ -40,6 +38,5 @@ CREATE TABLE IF NOT EXISTS societies
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
-
 -- +goose StatementEnd
 
