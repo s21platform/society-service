@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-DROP TABLE IF EXISTS societies;
+DROP TABLE IF EXISTS societies CASCADE;
 -- +goose StatementEnd
 
 -- +goose StatementBegin
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS society
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS society;
+DROP TABLE IF EXISTS society CASCADE;
 -- +goose StatementEnd
 
 -- +goose StatementBegin
