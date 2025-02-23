@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS society (
-    id                      UUID PRIMARY KEY,
+    id                      UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name                    VARCHAR (255) NOT NULL,
     description             TEXT,
     owner_uuid              UUID NOT NULL,
