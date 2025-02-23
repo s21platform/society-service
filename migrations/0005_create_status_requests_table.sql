@@ -6,6 +6,13 @@ CREATE TABLE IF NOT EXISTS status_requests (
 );
 -- +goose StatementEnd
 
+-- +goose StatementBegin
+INSERT INTO status_requests (status) VALUES
+                                         ('pending'),
+                                         ('approved'),
+                                         ('rejected');
+-- +goose StatementEnd
+
 -- +goose Down
 -- +goose StatementBegin
 DROP TABLE IF EXISTS status_requests CASCADE;

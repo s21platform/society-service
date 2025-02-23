@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS society_members (
     id                      SERIAL PRIMARY KEY,
-    society_id              INT NOT NULL,
+    society_id              UUID NOT NULL,
     user_uuid               UUID NOT NULL,
     role                    INT NOT NULL,
     create_at               TIMESTAMP DEFAULT NOW(),
