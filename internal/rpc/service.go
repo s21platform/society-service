@@ -27,6 +27,10 @@ func (s *Server) CreateSociety(ctx context.Context, in *society.SetSocietyIn) (*
 		return nil, status.Error(codes.Internal, "uuid not found in context")
 	}
 
+	if in.Name == "" {
+		return nil, status.Error(codes.InvalidArgument, "name not provided")
+	}
+
 	SocietyData := model.SocietyData{
 		Name:           in.Name,
 		FormatID:       in.FormatID,

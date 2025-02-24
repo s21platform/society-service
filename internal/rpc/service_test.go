@@ -5,6 +5,9 @@ import (
 	"errors"
 	"testing"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/docker/distribution/uuid"
 	"github.com/golang/mock/gomock"
 	society "github.com/s21platform/society-proto/society-proto"
@@ -80,6 +83,27 @@ func TestServer_CreateSociety(t *testing.T) {
 		result, err := s.CreateSociety(ctx, mockInput)
 		assert.Error(t, err)
 		assert.Equal(t, expectedError, err)
+		assert.Nil(t, result)
+	})
+	t.Run("should_return_error_if_name_is_empty", func(t *testing.T) {
+		userUUID := uuid.Generate().String()
+		ctx := context.WithValue(context.Background(), config.KeyUUID, userUUID)
+
+		mockInput := &society.SetSocietyIn{
+			Name:             "",
+			FormatID:         1,
+			PostPermissionID: 2,
+			IsSearch:         true,
+		}
+
+		result, err := s.CreateSociety(ctx, mockInput)
+		statusErr, ok := status.FromError(err)
+
+		assert.Error(t, err)
+		assert.True(t, ok)
+		assert.Equal(t, codes.InvalidArgument, statusErr.Code())
+		assert.Equal(t, "name not provided", statusErr.Message())
+
 		assert.Nil(t, result)
 	})
 }
