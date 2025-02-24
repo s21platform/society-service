@@ -1,4 +1,5 @@
 -- +goose Up
+-- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS post_permission (
     id              SERIAL PRIMARY KEY,
     post_permission TEXT NOT NULL
