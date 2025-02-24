@@ -34,137 +34,17 @@ func (m *MockDbRepo) EXPECT() *MockDbRepoMockRecorder {
 	return m.recorder
 }
 
-// CreateGroup mocks base method.
-func (m *MockDbRepo) CreateGroup(socData *model.SocietyData) (int, error) {
+// CreateSociety mocks base method.
+func (m *MockDbRepo) CreateSociety(socData *model.SocietyData) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateGroup", socData)
-	ret0, _ := ret[0].(int)
+	ret := m.ctrl.Call(m, "CreateSociety", socData)
+	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CreateGroup indicates an expected call of CreateGroup.
-func (mr *MockDbRepoMockRecorder) CreateGroup(socData interface{}) *gomock.Call {
+// CreateSociety indicates an expected call of CreateSociety.
+func (mr *MockDbRepoMockRecorder) CreateSociety(socData interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGroup", reflect.TypeOf((*MockDbRepo)(nil).CreateGroup), socData)
-}
-
-// GetAccessLevel mocks base method.
-func (m *MockDbRepo) GetAccessLevel() (*[]model.AccessLevel, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAccessLevel")
-	ret0, _ := ret[0].(*[]model.AccessLevel)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAccessLevel indicates an expected call of GetAccessLevel.
-func (mr *MockDbRepoMockRecorder) GetAccessLevel() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccessLevel", reflect.TypeOf((*MockDbRepo)(nil).GetAccessLevel))
-}
-
-// GetCountSocietyWithOffset mocks base method.
-func (m *MockDbRepo) GetCountSocietyWithOffset(socData *model.WithOffsetData) (int64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCountSocietyWithOffset", socData)
-	ret0, _ := ret[0].(int64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetCountSocietyWithOffset indicates an expected call of GetCountSocietyWithOffset.
-func (mr *MockDbRepoMockRecorder) GetCountSocietyWithOffset(socData interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCountSocietyWithOffset", reflect.TypeOf((*MockDbRepo)(nil).GetCountSocietyWithOffset), socData)
-}
-
-// GetPermissions mocks base method.
-func (m *MockDbRepo) GetPermissions() (*[]model.GetPermissions, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPermissions")
-	ret0, _ := ret[0].(*[]model.GetPermissions)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetPermissions indicates an expected call of GetPermissions.
-func (mr *MockDbRepoMockRecorder) GetPermissions() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPermissions", reflect.TypeOf((*MockDbRepo)(nil).GetPermissions))
-}
-
-// GetSocietiesForUser mocks base method.
-func (m *MockDbRepo) GetSocietiesForUser(uuid, uuidUser string) (*[]model.SocietyWithOffsetData, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSocietiesForUser", uuid, uuidUser)
-	ret0, _ := ret[0].(*[]model.SocietyWithOffsetData)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSocietiesForUser indicates an expected call of GetSocietiesForUser.
-func (mr *MockDbRepoMockRecorder) GetSocietiesForUser(uuid, uuidUser interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSocietiesForUser", reflect.TypeOf((*MockDbRepo)(nil).GetSocietiesForUser), uuid, uuidUser)
-}
-
-// GetSocietyInfo mocks base method.
-func (m *MockDbRepo) GetSocietyInfo(id int64) (*model.SocietyInfo, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSocietyInfo", id)
-	ret0, _ := ret[0].(*model.SocietyInfo)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSocietyInfo indicates an expected call of GetSocietyInfo.
-func (mr *MockDbRepoMockRecorder) GetSocietyInfo(id interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSocietyInfo", reflect.TypeOf((*MockDbRepo)(nil).GetSocietyInfo), id)
-}
-
-// GetSocietyWithOffset mocks base method.
-func (m *MockDbRepo) GetSocietyWithOffset(data *model.WithOffsetData) (*[]model.SocietyWithOffsetData, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSocietyWithOffset", data)
-	ret0, _ := ret[0].(*[]model.SocietyWithOffsetData)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSocietyWithOffset indicates an expected call of GetSocietyWithOffset.
-func (mr *MockDbRepoMockRecorder) GetSocietyWithOffset(data interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSocietyWithOffset", reflect.TypeOf((*MockDbRepo)(nil).GetSocietyWithOffset), data)
-}
-
-// SubscribeToSociety mocks base method.
-func (m *MockDbRepo) SubscribeToSociety(id int64, uuid string) (bool, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SubscribeToSociety", id, uuid)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// SubscribeToSociety indicates an expected call of SubscribeToSociety.
-func (mr *MockDbRepoMockRecorder) SubscribeToSociety(id, uuid interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubscribeToSociety", reflect.TypeOf((*MockDbRepo)(nil).SubscribeToSociety), id, uuid)
-}
-
-// UnsubscribeFromSociety mocks base method.
-func (m *MockDbRepo) UnsubscribeFromSociety(id int64, uuid string) (bool, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UnsubscribeFromSociety", id, uuid)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UnsubscribeFromSociety indicates an expected call of UnsubscribeFromSociety.
-func (mr *MockDbRepoMockRecorder) UnsubscribeFromSociety(id, uuid interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnsubscribeFromSociety", reflect.TypeOf((*MockDbRepo)(nil).UnsubscribeFromSociety), id, uuid)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSociety", reflect.TypeOf((*MockDbRepo)(nil).CreateSociety), socData)
 }
