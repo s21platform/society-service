@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/docker/distribution/uuid"
+	"github.com/google/uuid"
 
 	"github.com/s21platform/society-service/internal/model"
 
@@ -54,17 +54,23 @@ func (r *Repository) Close() {
 }
 
 func (r *Repository) CreateSociety(socData *model.SocietyData) (string, error) {
-	var societyUUID uuid.UUID
+	var societyUUIDStr string
 	err := r.connection.QueryRowx("INSERT INTO society(name, owner_uuid, format_id, post_permission_id, is_search)"+
 		"VALUES ($1, $2, $3, $4, $5) RETURNING id",
 		socData.Name,
 		socData.OwnerUUID,
 		socData.FormatID,
 		socData.PostPermission,
-		socData.IsSearch).Scan(&societyUUID)
+		socData.IsSearch).Scan(&societyUUIDStr)
 	if err != nil {
 		return "", err
 	}
+
+	societyUUID, err := uuid.Parse(societyUUIDStr)
+	if err != nil {
+		return "", err
+	}
+
 	return societyUUID.String(), nil
 }
 
