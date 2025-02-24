@@ -56,7 +56,7 @@ func (r *Repository) Close() {
 func (r *Repository) CreateSociety(socData *model.SocietyData) (string, error) {
 	var societyUUID uuid.UUID
 	err := r.connection.QueryRowx("INSERT INTO society(name, owner_uuid, format_id, post_permission_id, is_search)"+
-		"VALUES ($1, $2, $3, $4, $5) RETURNING society_id",
+		"VALUES ($1, $2, $3, $4, $5) RETURNING id",
 		socData.Name,
 		socData.OwnerUUID,
 		socData.FormatID,
