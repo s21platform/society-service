@@ -2,9 +2,10 @@ package postgres
 
 import (
 	"fmt"
-	"github.com/docker/distribution/uuid"
 	"log"
 	"time"
+
+	"github.com/docker/distribution/uuid"
 
 	"github.com/s21platform/society-service/internal/model"
 
