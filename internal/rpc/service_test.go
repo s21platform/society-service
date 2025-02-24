@@ -1,128 +1,85 @@
-package rpc_test
+package rpc
 
 import (
-	"fmt"
+	"context"
+	"errors"
 	"testing"
 
+	"github.com/docker/distribution/uuid"
 	"github.com/golang/mock/gomock"
 	society "github.com/s21platform/society-proto/society-proto"
 	"github.com/s21platform/society-service/internal/config"
-	"github.com/s21platform/society-service/internal/model"
-	"github.com/s21platform/society-service/internal/rpc"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/net/context"
 )
 
-func TestServer_GetSocietiesForUser(t *testing.T) {
+func TestNew(t *testing.T) {
 	t.Parallel()
 
-	uuid := "test-uuid"
-	ctx := context.WithValue(context.Background(), config.KeyUUID, uuid)
-	controller := gomock.NewController(t)
-	defer controller.Finish()
-	mockRepo := rpc.NewMockDbRepo(controller)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-	userUuid := "user-uuid"
-	expectedSocieties := []model.SocietyWithOffsetData{
-		{
-			Name:       "Society 1",
-			AvatarLink: "https://example.com/avatar1",
-			SocietyId:  1,
-			IsMember:   true,
-			IsPrivate:  false,
-		},
-		{
-			Name:       "Society 2",
-			AvatarLink: "https://example.com/avatar2",
-			SocietyId:  2,
-			IsMember:   false,
-			IsPrivate:  true,
-		},
-	}
-	mockRepo.EXPECT().GetSocietiesForUser(uuid, userUuid).Return(&expectedSocieties, nil)
+	mockDBRepo := NewMockDbRepo(ctrl)
 
-	s := rpc.New(mockRepo)
+	server := New(mockDBRepo)
 
-	t.Run("get_societies_for_user_ok", func(t *testing.T) {
-		in := &society.GetSocietiesForUserIn{UserUuid: userUuid}
-		out, err := s.GetSocietiesForUser(ctx, in)
-		assert.NoError(t, err)
-		expectedOut := &society.GetSocietiesForUserOut{
-			Society: []*society.Society{
-				{
-					Name:       "Society 1",
-					AvatarLink: "https://example.com/avatar1",
-					SocietyId:  1,
-					IsMember:   true,
-					IsPrivate:  false,
-				},
-				{
-					Name:       "Society 2",
-					AvatarLink: "https://example.com/avatar2",
-					SocietyId:  2,
-					IsMember:   false,
-					IsPrivate:  true,
-				},
-			},
-		}
-		assert.Equal(t, expectedOut, out)
-	})
-
-	t.Run("uuid_not_in_context", func(t *testing.T) {
-		ctx := context.Background()
-		in := &society.GetSocietiesForUserIn{UserUuid: userUuid}
-		_, err := s.GetSocietiesForUser(ctx, in)
-		assert.EqualError(t, err, "uuid not found in context")
-	})
-
-	t.Run("repository_error", func(t *testing.T) {
-		mockRepo.EXPECT().GetSocietiesForUser(uuid, userUuid).Return(nil, fmt.Errorf("db error"))
-		in := &society.GetSocietiesForUserIn{UserUuid: userUuid}
-		_, err := s.GetSocietiesForUser(ctx, in)
-		assert.EqualError(t, err, "failed to get society for user: db error")
-	})
+	assert.NotNil(t, server)
+	assert.Equal(t, mockDBRepo, server.dbR)
 }
 
-func TestServer_GetSocietyInfo(t *testing.T) {
+func TestServer_CreateSociety(t *testing.T) {
 	t.Parallel()
 
-	uuid := "test-uuid"
-	ctx := context.WithValue(context.Background(), config.KeyUUID, uuid)
-	controller := gomock.NewController(t)
-	defer controller.Finish()
-	mockRepo := rpc.NewMockDbRepo(controller)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-	expectedSocieties := model.SocietyInfo{
-		Name:             "Society 1",
-		Description:      "This is a test society 1",
-		OwnerId:          "user-uuid",
-		PhotoUrl:         "https://example.com/avatar1",
-		IsPrivate:        true,
-		CountSubscribers: 5,
-	}
-	mockRepo.EXPECT().GetSocietyInfo(int64(1)).Return(&expectedSocieties, nil)
+	mockDBRepo := NewMockDbRepo(ctrl)
 
-	s := rpc.New(mockRepo)
+	s := &Server{dbR: mockDBRepo}
+	t.Run("should_create_society_successfully", func(t *testing.T) {
+		userUUID := uuid.Generate().String()
+		ctx := context.WithValue(context.Background(), config.KeyUUID, userUUID)
 
-	t.Run("get_societies_info_ok", func(t *testing.T) {
-		in := &society.GetSocietyInfoIn{Id: 1}
-		out, err := s.GetSocietyInfo(ctx, in)
-		assert.NoError(t, err)
-		expectedOut := &society.GetSocietyInfoOut{
-			Name:             "Society 1",
-			Description:      "This is a test society 1",
-			OwnerUUID:        "user-uuid",
-			PhotoUrl:         "https://example.com/avatar1",
-			IsPrivate:        true,
-			CountSubscribers: 5,
+		mockInput := &society.SetSocietyIn{
+			Name:             "Test Society",
+			FormatID:         1,
+			PostPermissionID: 2,
+			IsSearch:         true,
 		}
-		assert.Equal(t, expectedOut, out)
-	})
+		expectedSocietyUUID := uuid.Generate().String()
+		mockDBRepo.EXPECT().CreateSociety(gomock.Any()).Return(expectedSocietyUUID, nil)
 
-	t.Run("repository_error", func(t *testing.T) {
-		mockRepo.EXPECT().GetSocietyInfo(int64(1)).Return(nil, fmt.Errorf("db error"))
-		in := &society.GetSocietyInfoIn{Id: 1}
-		_, err := s.GetSocietyInfo(ctx, in)
-		assert.EqualError(t, err, "failed to get society info: db error")
+		result, err := s.CreateSociety(ctx, mockInput)
+		expectedOutput := &society.SetSocietyOut{SocietyUUID: expectedSocietyUUID}
+
+		assert.NoError(t, err)
+		assert.Equal(t, expectedOutput, result)
+	})
+	t.Run("should_return_error_if_uuid_not_found_in_context", func(t *testing.T) {
+		ctx := context.Background()
+		mockInput := &society.SetSocietyIn{
+			Name:             "Test Society",
+			FormatID:         1,
+			PostPermissionID: 2,
+			IsSearch:         true,
+		}
+		result, err := s.CreateSociety(ctx, mockInput)
+		assert.Nil(t, result)
+		assert.Error(t, err)
+	})
+	t.Run("should_return_error_if_dbR_CreateSociety_fails", func(t *testing.T) {
+		userUUID := uuid.Generate().String()
+		ctx := context.WithValue(context.Background(), config.KeyUUID, userUUID)
+		mockInput := &society.SetSocietyIn{
+			Name:             "Test Society",
+			FormatID:         1,
+			PostPermissionID: 2,
+			IsSearch:         true,
+		}
+		expectedError := errors.New("database error")
+		mockDBRepo.EXPECT().CreateSociety(gomock.Any()).Return("", expectedError)
+		result, err := s.CreateSociety(ctx, mockInput)
+		assert.Error(t, err)
+		assert.Equal(t, expectedError, err)
+		assert.Nil(t, result)
 	})
 }
