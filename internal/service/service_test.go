@@ -3,8 +3,9 @@ package service
 import (
 	"context"
 	"errors"
-	logger_lib "github.com/s21platform/logger-lib"
 	"testing"
+
+	logger_lib "github.com/s21platform/logger-lib"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

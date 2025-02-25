@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	logger_lib "github.com/s21platform/logger-lib"
 	"log"
 	"net"
 	"os"
+
+	logger_lib "github.com/s21platform/logger-lib"
 
 	"github.com/s21platform/society-service/internal/infra"
 

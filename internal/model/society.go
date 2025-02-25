@@ -8,22 +8,18 @@ type SocietyData struct {
 	OwnerUUID      string
 }
 
-//
-//type AccessLevel struct {
-//	Id          int64  `db:"id"`
-//	AccessLevel string `db:"level_name"`
-//}
-//
-//type AccessLevelData struct {
-//	AccessLevel []AccessLevel
-//}
-//
-//type GetPermissions struct {
-//	Id          int64  `db:"id"`
-//	Name        string `db:"name"`
-//	Description string `db:"description"`
-//}
-//
+type SocietyInfo struct {
+	Name           string
+	Description    string
+	OwnerUUID      string
+	PhotoURL       string
+	FormatID       int64
+	PostPermission int64
+	IsSearch       bool
+	CountSubscribe int64
+	TagsID         []int64
+}
+
 //type SocietyWithOffset struct {
 //	Society []SocietyWithOffsetData
 //	Total   int64

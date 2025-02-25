@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+
 	logger_lib "github.com/s21platform/logger-lib"
 
 	society "github.com/s21platform/society-proto/society-proto"
@@ -49,6 +50,41 @@ func (s *Server) CreateSociety(ctx context.Context, in *society.SetSocietyIn) (*
 		return nil, err
 	}
 	return &society.SetSocietyOut{SocietyUUID: societyUUID}, status.Error(codes.OK, "success")
+}
+
+func (s *Server) GetSocietyInfo(ctx context.Context, in *society.GetSocietyInfoIn) (*society.GetSocietyInfoOut, error) {
+	logger := logger_lib.FromContext(ctx, config.KeyLogger)
+	logger.AddFuncName("GetSocietyInfo")
+
+	if in.SocietyUUID == "" {
+		logger.Error("failed to SocietyUUID is empty")
+		return nil, status.Error(codes.InvalidArgument, "societyUUID not provided")
+	}
+
+	societyInfo, err := s.dbR.GetSocietyInfo(in.SocietyUUID)
+
+	if err != nil {
+		logger.Error("failed to GetSocietyInfo from BD")
+		return nil, err
+	}
+
+	var tags []*society.TagsID
+	for _, tag := range societyInfo.TagsID {
+		tags = append(tags, &society.TagsID{TagID: tag})
+	}
+
+	out := &society.GetSocietyInfoOut{
+		Name:           societyInfo.Name,
+		Description:    societyInfo.Description,
+		OwnerUUID:      societyInfo.OwnerUUID,
+		PhotoURL:       societyInfo.PhotoURL,
+		FormatID:       societyInfo.FormatID,
+		PostPermission: societyInfo.PostPermission,
+		IsSearch:       societyInfo.IsSearch,
+		CountSubscribe: societyInfo.CountSubscribe,
+		TagsID:         tags,
+	}
+	return out, nil
 }
 
 //func (s *Server) GetAccessLevel(context.Context, *society.EmptySociety) (*society.GetAccessLevelOut, error) {

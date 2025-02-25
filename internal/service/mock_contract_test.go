@@ -48,3 +48,18 @@ func (mr *MockDbRepoMockRecorder) CreateSociety(socData interface{}) *gomock.Cal
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSociety", reflect.TypeOf((*MockDbRepo)(nil).CreateSociety), socData)
 }
+
+// GetSocietyInfo mocks base method.
+func (m *MockDbRepo) GetSocietyInfo(societyUUID string) (*model.SocietyInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSocietyInfo", societyUUID)
+	ret0, _ := ret[0].(*model.SocietyInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSocietyInfo indicates an expected call of GetSocietyInfo.
+func (mr *MockDbRepoMockRecorder) GetSocietyInfo(societyUUID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSocietyInfo", reflect.TypeOf((*MockDbRepo)(nil).GetSocietyInfo), societyUUID)
+}
