@@ -1,8 +1,9 @@
-package rpc
+package service
 
 import (
 	"context"
 	"errors"
+	logger_lib "github.com/s21platform/logger-lib"
 	"testing"
 
 	"google.golang.org/grpc/codes"
@@ -36,6 +37,7 @@ func TestServer_CreateSociety(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockDBRepo := NewMockDbRepo(ctrl)
+	mockLogger := logger_lib.NewMockLoggerInterface(ctrl)
 
 	s := &Server{dbR: mockDBRepo}
 	t.Run("should_create_society_successfully", func(t *testing.T) {
@@ -49,7 +51,10 @@ func TestServer_CreateSociety(t *testing.T) {
 			IsSearch:         true,
 		}
 		expectedSocietyUUID := uuid.Generate().String()
+		//mockLogger.EXPECT().AddFuncName("CreateSociety")
 		mockDBRepo.EXPECT().CreateSociety(gomock.Any()).Return(expectedSocietyUUID, nil)
+		mockLogger.EXPECT().AddFuncName("CreateSociety")
+		ctx = context.WithValue(ctx, config.KeyLogger, mockLogger)
 
 		result, err := s.CreateSociety(ctx, mockInput)
 		expectedOutput := &society.SetSocietyOut{SocietyUUID: expectedSocietyUUID}
@@ -65,7 +70,11 @@ func TestServer_CreateSociety(t *testing.T) {
 			PostPermissionID: 2,
 			IsSearch:         true,
 		}
+		mockLogger.EXPECT().AddFuncName("CreateSociety")
+		ctx = context.WithValue(ctx, config.KeyLogger, mockLogger)
+		mockLogger.EXPECT().Error("failed to not found UUID in context")
 		result, err := s.CreateSociety(ctx, mockInput)
+
 		assert.Nil(t, result)
 		assert.Error(t, err)
 	})
@@ -80,6 +89,10 @@ func TestServer_CreateSociety(t *testing.T) {
 		}
 		expectedError := errors.New("database error")
 		mockDBRepo.EXPECT().CreateSociety(gomock.Any()).Return("", expectedError)
+		mockLogger.EXPECT().AddFuncName("CreateSociety")
+		mockLogger.EXPECT().Error("failed to CreateSociety from BD")
+		ctx = context.WithValue(ctx, config.KeyLogger, mockLogger)
+
 		result, err := s.CreateSociety(ctx, mockInput)
 		assert.Error(t, err)
 		assert.Equal(t, expectedError, err)
@@ -95,6 +108,9 @@ func TestServer_CreateSociety(t *testing.T) {
 			PostPermissionID: 2,
 			IsSearch:         true,
 		}
+		mockLogger.EXPECT().AddFuncName("CreateSociety")
+		mockLogger.EXPECT().Error("failed to Name society is empty")
+		ctx = context.WithValue(ctx, config.KeyLogger, mockLogger)
 
 		result, err := s.CreateSociety(ctx, mockInput)
 		statusErr, ok := status.FromError(err)

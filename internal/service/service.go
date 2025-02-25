@@ -1,7 +1,8 @@
-package rpc
+package service
 
 import (
 	"context"
+	logger_lib "github.com/s21platform/logger-lib"
 
 	society "github.com/s21platform/society-proto/society-proto"
 	"github.com/s21platform/society-service/internal/config"
@@ -23,11 +24,15 @@ func New(repo DbRepo) *Server {
 
 func (s *Server) CreateSociety(ctx context.Context, in *society.SetSocietyIn) (*society.SetSocietyOut, error) {
 	uuid, ok := ctx.Value(config.KeyUUID).(string)
+	logger := logger_lib.FromContext(ctx, config.KeyLogger)
+	logger.AddFuncName("CreateSociety")
 	if !ok {
+		logger.Error("failed to not found UUID in context")
 		return nil, status.Error(codes.Internal, "uuid not found in context")
 	}
 
 	if in.Name == "" {
+		logger.Error("failed to Name society is empty")
 		return nil, status.Error(codes.InvalidArgument, "name not provided")
 	}
 
@@ -40,6 +45,7 @@ func (s *Server) CreateSociety(ctx context.Context, in *society.SetSocietyIn) (*
 	}
 	societyUUID, err := s.dbR.CreateSociety(&SocietyData)
 	if err != nil {
+		logger.Error("failed to CreateSociety from BD")
 		return nil, err
 	}
 	return &society.SetSocietyOut{SocietyUUID: societyUUID}, status.Error(codes.OK, "success")

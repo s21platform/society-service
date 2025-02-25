@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	logger_lib "github.com/s21platform/logger-lib"
 	"log"
 	"net"
 	"os"
@@ -14,12 +15,14 @@ import (
 
 	"github.com/s21platform/society-service/internal/config"
 	db "github.com/s21platform/society-service/internal/repository/postgres"
-	"github.com/s21platform/society-service/internal/rpc"
+	"github.com/s21platform/society-service/internal/service"
 )
 
 func main() {
 	// чтение конфига
 	cfg := config.MustLoad()
+
+	logger := logger_lib.New(cfg.Logger.Host, cfg.Logger.Port, cfg.Service.Name, cfg.Platform.Env)
 
 	dbRepo, err := db.New(cfg)
 
@@ -29,11 +32,12 @@ func main() {
 	}
 	defer dbRepo.Close()
 
-	server := rpc.New(dbRepo)
+	server := service.New(dbRepo)
 	s := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			infra.Verifcation,
 		),
+		grpc.ChainUnaryInterceptor(infra.Logger(logger)),
 	)
 	society.RegisterSocietyServiceServer(s, server)
 
@@ -43,6 +47,6 @@ func main() {
 		log.Fatalf("Cannnot listen port: %s; Error: %s", cfg.Service.Port, err)
 	}
 	if err := s.Serve(lis); err != nil {
-		log.Fatalf("Cannnot start rpc: %s; Error: %s", cfg.Service.Port, err)
+		log.Fatalf("Cannnot start service: %s; Error: %s", cfg.Service.Port, err)
 	}
 }
