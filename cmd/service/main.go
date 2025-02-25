@@ -27,7 +27,7 @@ func main() {
 	dbRepo, err := db.New(cfg)
 
 	if err != nil {
-		logger.Error(fmt.Sprintf("db.New: %v", err))
+		logger.Error(fmt.Sprintf("failed to db.New: %v", err))
 		os.Exit(1)
 	}
 	defer dbRepo.Close()
@@ -44,9 +44,9 @@ func main() {
 	logger.Info(fmt.Sprintf("starting server %v", cfg.Service.Port))
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.Service.Port))
 	if err != nil {
-		logger.Error(fmt.Sprintf("Cannnot listen port: %s; Error: %s", cfg.Service.Port, err))
+		logger.Error(fmt.Sprintf("failed to cannnot listen port: %s; Error: %s", cfg.Service.Port, err))
 	}
 	if err := s.Serve(lis); err != nil {
-		logger.Error(fmt.Sprintf("Cannnot start service: %s; Error: %s", cfg.Service.Port, err))
+		logger.Error(fmt.Sprintf("failed to cannnot start service: %s; Error: %s", cfg.Service.Port, err))
 	}
 }
