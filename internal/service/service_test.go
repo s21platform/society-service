@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"github.com/s21platform/society-service/internal/model"
 	"testing"
 
 	logger_lib "github.com/s21platform/logger-lib"
@@ -52,7 +53,6 @@ func TestServer_CreateSociety(t *testing.T) {
 			IsSearch:         true,
 		}
 		expectedSocietyUUID := uuid.Generate().String()
-		//mockLogger.EXPECT().AddFuncName("CreateSociety")
 		mockDBRepo.EXPECT().CreateSociety(gomock.Any()).Return(expectedSocietyUUID, nil)
 		mockLogger.EXPECT().AddFuncName("CreateSociety")
 		ctx = context.WithValue(ctx, config.KeyLogger, mockLogger)
@@ -122,5 +122,85 @@ func TestServer_CreateSociety(t *testing.T) {
 		assert.Equal(t, "name not provided", statusErr.Message())
 
 		assert.Nil(t, result)
+	})
+}
+
+func TestServer_GetSocietyInfo(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockDBRepo := NewMockDbRepo(ctrl)
+	mockLogger := logger_lib.NewMockLoggerInterface(ctrl)
+
+	s := &Server{dbR: mockDBRepo}
+
+	t.Run("should_get_society_info_successfully", func(t *testing.T) {
+		ctx := context.WithValue(context.Background(), config.KeyLogger, mockLogger)
+		societyUUID := uuid.Generate().String()
+		mockInput := &society.GetSocietyInfoIn{SocietyUUID: societyUUID}
+
+		expectedSocietyInfo := &model.SocietyInfo{
+			Name:           "Test Society",
+			Description:    "A test society",
+			OwnerUUID:      uuid.Generate().String(),
+			PhotoURL:       "https://example.com/photo.jpg",
+			FormatID:       1,
+			PostPermission: 2,
+			IsSearch:       true,
+			CountSubscribe: 100,
+			TagsID:         []int64{1, 2},
+		}
+
+		mockDBRepo.EXPECT().GetSocietyInfo(societyUUID).Return(expectedSocietyInfo, nil)
+		mockLogger.EXPECT().AddFuncName("GetSocietyInfo")
+
+		result, err := s.GetSocietyInfo(ctx, mockInput)
+
+		assert.NoError(t, err)
+		assert.Equal(t, expectedSocietyInfo.Name, result.Name)
+		assert.Equal(t, expectedSocietyInfo.Description, result.Description)
+		assert.Equal(t, expectedSocietyInfo.OwnerUUID, result.OwnerUUID)
+		assert.Equal(t, expectedSocietyInfo.PhotoURL, result.PhotoURL)
+		assert.Equal(t, expectedSocietyInfo.FormatID, result.FormatID)
+		assert.Equal(t, expectedSocietyInfo.PostPermission, result.PostPermission)
+		assert.Equal(t, expectedSocietyInfo.IsSearch, result.IsSearch)
+		assert.Equal(t, expectedSocietyInfo.CountSubscribe, result.CountSubscribe)
+		assert.Len(t, result.TagsID, len(expectedSocietyInfo.TagsID))
+	})
+
+	t.Run("should_return_error_if_societyUUID_is_empty", func(t *testing.T) {
+		ctx := context.WithValue(context.Background(), config.KeyLogger, mockLogger)
+		mockInput := &society.GetSocietyInfoIn{SocietyUUID: ""}
+
+		mockLogger.EXPECT().AddFuncName("GetSocietyInfo")
+		mockLogger.EXPECT().Error("failed to SocietyUUID is empty")
+
+		result, err := s.GetSocietyInfo(ctx, mockInput)
+
+		assert.Nil(t, result)
+		assert.Error(t, err)
+		statusErr, ok := status.FromError(err)
+		assert.True(t, ok)
+		assert.Equal(t, codes.InvalidArgument, statusErr.Code())
+		assert.Equal(t, "societyUUID not provided", statusErr.Message())
+	})
+
+	t.Run("should_return_error_if_dbR_GetSocietyInfo_fails", func(t *testing.T) {
+		ctx := context.WithValue(context.Background(), config.KeyLogger, mockLogger)
+		societyUUID := uuid.Generate().String()
+		mockInput := &society.GetSocietyInfoIn{SocietyUUID: societyUUID}
+		expectedError := errors.New("database error")
+
+		mockDBRepo.EXPECT().GetSocietyInfo(societyUUID).Return(nil, expectedError)
+		mockLogger.EXPECT().AddFuncName("GetSocietyInfo")
+		mockLogger.EXPECT().Error("failed to GetSocietyInfo from BD")
+
+		result, err := s.GetSocietyInfo(ctx, mockInput)
+
+		assert.Nil(t, result)
+		assert.Error(t, err)
+		assert.Equal(t, expectedError, err)
 	})
 }
