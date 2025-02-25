@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"os"
 
@@ -28,7 +27,7 @@ func main() {
 	dbRepo, err := db.New(cfg)
 
 	if err != nil {
-		log.Printf("db.New: %v", err)
+		logger.Error(fmt.Sprintf("db.New: %v", err))
 		os.Exit(1)
 	}
 	defer dbRepo.Close()
@@ -42,12 +41,12 @@ func main() {
 	)
 	society.RegisterSocietyServiceServer(s, server)
 
-	log.Println("starting server", cfg.Service.Port)
+	logger.Info(fmt.Sprintf("starting server %v", cfg.Service.Port))
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.Service.Port))
 	if err != nil {
-		log.Fatalf("Cannnot listen port: %s; Error: %s", cfg.Service.Port, err)
+		logger.Error(fmt.Sprintf("Cannnot listen port: %s; Error: %s", cfg.Service.Port, err))
 	}
 	if err := s.Serve(lis); err != nil {
-		log.Fatalf("Cannnot start service: %s; Error: %s", cfg.Service.Port, err)
+		logger.Error(fmt.Sprintf("Cannnot start service: %s; Error: %s", cfg.Service.Port, err))
 	}
 }
