@@ -3,8 +3,9 @@ package service
 import (
 	"context"
 	"errors"
-	"github.com/s21platform/society-service/internal/model"
 	"testing"
+
+	"github.com/s21platform/society-service/internal/model"
 
 	logger_lib "github.com/s21platform/logger-lib"
 
