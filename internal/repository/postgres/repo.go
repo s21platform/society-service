@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/lib/pq"
+
 	"github.com/google/uuid"
 
 	"github.com/s21platform/society-service/internal/model"
@@ -74,6 +76,66 @@ func (r *Repository) CreateSociety(socData *model.SocietyData) (string, error) {
 	return societyUUID.String(), nil
 }
 
+func (r *Repository) GetSocietyInfo(societyUUID string) (*model.SocietyInfo, error) {
+	var societyInfo model.SocietyInfo
+
+	query := `SELECT 
+		s.name, 
+		s.description, 
+		s.owner_uuid, 
+		s.photo_url, 
+		s.format_id, 
+		s.post_permission_id, 
+		s.is_search, 
+		COALESCE(COUNT(mr.user_uuid), 0) AS count_subscribe, 
+		ARRAY_REMOVE(ARRAY_AGG(sha.tag_id), NULL) AS tags_id
+	FROM society s
+	LEFT JOIN members_requests mr ON s.id = mr.society_id AND mr.status_id = 1 -- 1 означает, что пользователь принят в сообщество
+	LEFT JOIN society_has_tags sha ON s.id = sha.society_id AND sha.is_active = TRUE
+	WHERE s.id = $1
+	GROUP BY s.id;`
+
+	row := r.connection.QueryRow(query, societyUUID)
+
+	var tags pq.Int64Array
+
+	err := row.Scan(
+		&societyInfo.Name,
+		&societyInfo.Description,
+		&societyInfo.OwnerUUID,
+		&societyInfo.PhotoURL,
+		&societyInfo.FormatID,
+		&societyInfo.PostPermission,
+		&societyInfo.IsSearch,
+		&societyInfo.CountSubscribe,
+		&tags,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	societyInfo.TagsID = tags
+
+	return &societyInfo, nil
+}
+
+//	var data model.SocietyInfo
+//	query := "SELECT name, " +
+//		"description, " +
+//		"owner_uuid, " +
+//		"photo_url, " +
+//		"is_private, " +
+//		"COALESCE(count_s, 0) " +
+//		"AS count_subscribers FROM societies s LEFT JOIN (SELECT society_id, count(*) AS count_s from societies_subscribers GROUP BY society_id) ss ON s.id = ss.society_id " +
+//		"WHERE id = $1"
+//	err := r.connection.Get(&data, query, id)
+//	if err != nil {
+//		return nil, fmt.Errorf("failed to get society info: %v", err)
+//	}
+//
+//	return &data, nil
+//}
 //
 //func (r *Repository) GetAccessLevel() (*[]model.AccessLevel, error) {
 //	var data []model.AccessLevel
@@ -128,23 +190,6 @@ func (r *Repository) CreateSociety(socData *model.SocietyData) (string, error) {
 //	return count, nil
 //}
 //
-//func (r *Repository) GetSocietyInfo(id int64) (*model.SocietyInfo, error) {
-//	var data model.SocietyInfo
-//	query := "SELECT name, " +
-//		"description, " +
-//		"owner_uuid, " +
-//		"photo_url, " +
-//		"is_private, " +
-//		"COALESCE(count_s, 0) " +
-//		"AS count_subscribers FROM societies s LEFT JOIN (SELECT society_id, count(*) AS count_s from societies_subscribers GROUP BY society_id) ss ON s.id = ss.society_id " +
-//		"WHERE id = $1"
-//	err := r.connection.Get(&data, query, id)
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to get society info: %v", err)
-//	}
-//
-//	return &data, nil
-//}
 //
 //func (r *Repository) SubscribeToSociety(id int64, uuid string) (bool, error) {
 //	_, err := r.connection.Exec("INSERT INTO societies_subscribers (society_id, user_uuid) VALUES ($1, $2)", id, uuid)

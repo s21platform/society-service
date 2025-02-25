@@ -1,0 +1,26 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: friends
+  description: Сервис сообществ
+  annotations:
+    github.com/project-slug: s21platform/society-service
+  #    backstage.io/techdocs-ref: dir:.  # Если планируете использовать TechDocs
+  tags:
+    - grpc
+    - postgres
+#  links:
+#    - url: https://metric.x.space-21.ru/d/bdzr28ivhrkzkd/friends-service?orgId=1&refresh=30s
+#      title: Grafana
+#      icon: dashboard
+spec:
+  type: service
+  lifecycle: production
+  owner: society-service-team  # GitHub-логин ответственного
+  providesApis:
+    - society-api  # API, который предоставляет сервис
+  consumesApis:
+    - friends-api
+  dependsOn:
+    - component:friends
+#  system: authentication-system  # Можно указать систему, если есть
