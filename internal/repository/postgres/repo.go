@@ -128,6 +128,33 @@ func (r *Repository) GetSocietyInfo(societyUUID string) (*model.SocietyInfo, err
 	return &societyInfo, nil
 }
 
-func (r *Repository) UpdateSociety(societyData *society.UpdateSocietyIn, ownerUUID string) error {
+func (r *Repository) UpdateSociety(societyData *society.UpdateSocietyIn, peerUUID string) error {
+	if !isOwnerAdminModerator(peerUUID, societyData.SocietyUUID, r) {
+		return fmt.Errorf("faild to peer not Owner, Admin or Moderator to update society")
+	}
+	_, err := r.connection.Exec("update society set name = $1, description = $2,"+
+		"photo_url = $3, format_id = $4, post_permission_id = $5, is_search = $5 where society_id = $6",
+		societyData.Name,
+		societyData.Description,
+		societyData.PhotoURL,
+		societyData.FormatID,
+		societyData.PostPermission,
+		societyData.IsSearch,
+		societyData.SocietyUUID)
+	if err != nil {
+		return fmt.Errorf("faild to update society: %w", err)
+	}
 	return nil
+}
+
+func isOwnerAdminModerator(peerUUID, societyUUID string, r *Repository) bool {
+	var role int
+	err := r.connection.QueryRowx("select role from society_members where society_id = $1 and user_uuid = $2", societyUUID, peerUUID).Scan(&role)
+	if err != nil {
+		return false
+	}
+	if role == 1 || role == 2 || role == 3 {
+		return true
+	}
+	return false
 }
