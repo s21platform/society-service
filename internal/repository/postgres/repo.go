@@ -134,7 +134,7 @@ func (r *Repository) UpdateSociety(societyData *society.UpdateSocietyIn, peerUUI
 		return fmt.Errorf("faild to peer not Owner, Admin or Moderator to update society")
 	}
 	_, err := r.connection.Exec("update society set name = $1, description = $2,"+
-		"photo_url = $3, format_id = $4, post_permission_id = $5, is_search = $5 where id = $6",
+		"photo_url = $3, format_id = $4, post_permission_id = $5, is_search = $6 where id = $7",
 		societyData.Name,
 		societyData.Description,
 		societyData.PhotoURL,
