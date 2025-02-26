@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	society "github.com/s21platform/society-proto/society-proto"
+
 	"github.com/lib/pq"
 
 	"github.com/google/uuid"
@@ -72,6 +74,12 @@ func (r *Repository) CreateSociety(socData *model.SocietyData) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	_, err = r.connection.Exec("INSERT INTO society_members(society_id, user_uuid, role, payment_status)"+
+		"VALUES ($1, $2, 1, 1)", societyUUID, socData.OwnerUUID)
+
+	if err != nil {
+		return "", err
+	}
 
 	return societyUUID.String(), nil
 }
@@ -120,111 +128,6 @@ func (r *Repository) GetSocietyInfo(societyUUID string) (*model.SocietyInfo, err
 	return &societyInfo, nil
 }
 
-//	var data model.SocietyInfo
-//	query := "SELECT name, " +
-//		"description, " +
-//		"owner_uuid, " +
-//		"photo_url, " +
-//		"is_private, " +
-//		"COALESCE(count_s, 0) " +
-//		"AS count_subscribers FROM societies s LEFT JOIN (SELECT society_id, count(*) AS count_s from societies_subscribers GROUP BY society_id) ss ON s.id = ss.society_id " +
-//		"WHERE id = $1"
-//	err := r.connection.Get(&data, query, id)
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to get society info: %v", err)
-//	}
-//
-//	return &data, nil
-//}
-//
-//func (r *Repository) GetAccessLevel() (*[]model.AccessLevel, error) {
-//	var data []model.AccessLevel
-//	err := r.connection.Select(&data, "SELECT id, level_name FROM access_level")
-//	if err != nil {
-//		return nil, fmt.Errorf("r.connection.Select: %v", err)
-//	}
-//
-//	return &data, nil
-//}
-//
-//func (r *Repository) GetPermissions() (*[]model.GetPermissions, error) {
-//	var data []model.GetPermissions
-//	err := r.connection.Select(&data, "SELECT id, name, description FROM user_permissions")
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to get permission: %v", err)
-//	}
-//
-//	return &data, nil
-//}
-//
-//func (r *Repository) GetSocietyWithOffset(socData *model.WithOffsetData) (*[]model.SocietyWithOffsetData, error) {
-//	var data []model.SocietyWithOffsetData
-//	query := "SELECT name, photo_url, s.id society_id, " +
-//		"CASE WHEN ss.user_uuid = $1 THEN true ELSE false END AS is_member " +
-//		"FROM societies s " +
-//		"LEFT JOIN societies_subscribers ss ON s.id = ss.society_id AND ss.user_uuid = $1 " +
-//		"WHERE ($2 = '' OR name ILIKE $2) "
-//
-//	err := r.connection.Select(&data, query+"OFFSET $3 LIMIT $4", socData.Uuid, "%"+socData.Name+"%", socData.Offset, socData.Limit)
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to get society with offset: %v", err)
-//	}
-//	return &data, err
-//}
-//
-//func (r *Repository) GetCountSocietyWithOffset(socData *model.WithOffsetData) (int64, error) {
-//	var count int64
-//	query := "SELECT name, photo_url, s.id society_id, " +
-//		"CASE WHEN ss.user_uuid = $1 THEN true ELSE false END AS is_member " +
-//		"FROM societies s " +
-//		"LEFT JOIN societies_subscribers ss ON s.id = ss.society_id AND ss.user_uuid = $1 " +
-//		"WHERE ($2 = '' OR name ILIKE $2) "
-//
-//	queryCount := "with test as  (" + query + ")" +
-//		"SELECT count(*) FROM test"
-//
-//	err := r.connection.Get(&count, queryCount, socData.Uuid, "%"+socData.Name+"%")
-//	if err != nil {
-//		return 0, fmt.Errorf("failed to get count society with offset: %v", err)
-//	}
-//	return count, nil
-//}
-//
-//
-//func (r *Repository) SubscribeToSociety(id int64, uuid string) (bool, error) {
-//	_, err := r.connection.Exec("INSERT INTO societies_subscribers (society_id, user_uuid) VALUES ($1, $2)", id, uuid)
-//	if err != nil {
-//		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
-//			return false, nil
-//		}
-//		return false, fmt.Errorf("r.connection.Exec: %v", err)
-//	}
-//
-//	return true, nil
-//}
-//
-//func (r *Repository) UnsubscribeFromSociety(id int64, uuid string) (bool, error) {
-//	var data []model.IdSociety
-//	err := r.connection.Select(&data, "SELECT society_id FROM societies_subscribers WHERE society_id = $1 AND user_uuid = $2", id, uuid)
-//	if err != nil {
-//		return false, fmt.Errorf("failed to select subscribe from society: %v", err)
-//	}
-//	if len(data) == 0 {
-//		return false, nil
-//	}
-//	if _, err := r.connection.Exec("DELETE FROM societies_subscribers WHERE society_id = $1 AND user_uuid = $2", id, uuid); err != nil {
-//		return false, fmt.Errorf("r.connection.Exec: %v", err)
-//	}
-//
-//	return true, nil
-//}
-//
-//func (r *Repository) GetSocietiesForUser(uuid string, uuidUser string) (*[]model.SocietyWithOffsetData, error) {
-//	var data []model.SocietyWithOffsetData
-//	err := r.connection.Select(&data, "SELECT name, photo_url, ss.id AS society_id, user_uuid = $1 as is_member, is_private FROM societies s JOIN societies_subscribers ss ON s.id = ss.society_id WHERE user_uuid = $2", uuid, uuidUser)
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to select societies for user: %v", err)
-//	}
-//
-//	return &data, nil
-//}
+func (r *Repository) UpdateSociety(societyData *society.UpdateSocietyIn, ownerUUID string) error {
+	return nil
+}

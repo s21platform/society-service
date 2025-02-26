@@ -87,48 +87,31 @@ func (s *Server) GetSocietyInfo(ctx context.Context, in *society.GetSocietyInfoI
 	return out, nil
 }
 
-//func (s *Server) GetAccessLevel(context.Context, *society.EmptySociety) (*society.GetAccessLevelOut, error) {
-//	data, err := s.dbR.GetAccessLevel()
-//	if err != nil {
-//		return nil, fmt.Errorf("s.dbR.GetAccessLevel %v", err)
-//	}
-//
-//	out := society.GetAccessLevelOut{
-//		Levels: make([]*society.AccessLevel, len(*data)),
-//	}
-//	for j, i := range *data {
-//		level := &society.AccessLevel{
-//			Id:          i.Id,
-//			AccessLevel: i.AccessLevel,
-//		}
-//		out.Levels[j] = level
-//	}
-//
-//	return &out, err
-//}
-//
-//func (s *Server) GetPermissions(context.Context, *society.EmptySociety) (*society.GetPermissionsOut, error) {
-//	data, err := s.dbR.GetPermissions()
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to get permission: %v", err)
-//	}
-//
-//	out := society.GetPermissionsOut{
-//		Permissions: make([]*society.Permission, len(*data)),
-//	}
-//
-//	for a, i := range *data {
-//		level := &society.Permission{
-//			Id:          i.Id,
-//			Name:        i.Name,
-//			Description: i.Description,
-//		}
-//		out.Permissions[a] = level
-//	}
-//
-//	return &out, err
-//}
-//
+func (s *Server) UpdateSociety(ctx context.Context, in *society.UpdateSocietyIn) (*society.EmptySociety, error) {
+	logger := logger_lib.FromContext(ctx, config.KeyLogger)
+	uuid, ok := ctx.Value(config.KeyUUID).(string)
+	logger.AddFuncName("UpdateSociety")
+
+	if !ok {
+		logger.Error("failed to not found UUID in context")
+		return nil, status.Error(codes.Internal, "uuid not found in context")
+	}
+
+	if in.SocietyUUID == "" {
+		logger.Error("failed to SocietyUUID is empty")
+		return nil, status.Error(codes.InvalidArgument, "societyUUID not provided")
+	}
+
+	err := s.dbR.UpdateSociety(in, uuid)
+
+	if err != nil {
+		logger.Error("failed to UpdateSociety from BD")
+		return nil, err
+	}
+
+	return &society.EmptySociety{}, nil
+}
+
 //func (s *Server) GetSocietyWithOffset(ctx context.Context, in *society.GetSocietyWithOffsetIn) (*society.GetSocietyWithOffsetOut, error) {
 //	uuid, ok := ctx.Value(config.KeyUUID).(string)
 //	if !ok {
@@ -163,23 +146,6 @@ func (s *Server) GetSocietyInfo(ctx context.Context, in *society.GetSocietyInfoI
 //		out.Society[j] = level
 //	}
 //
-//	return &out, err
-//}
-//
-//func (s *Server) GetSocietyInfo(ctx context.Context, in *society.GetSocietyInfoIn) (*society.GetSocietyInfoOut, error) {
-//	data, err := s.dbR.GetSocietyInfo(in.Id)
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to get society info: %v", err)
-//	}
-//
-//	out := society.GetSocietyInfoOut{
-//		Name:             data.Name,
-//		Description:      data.Description,
-//		OwnerUUID:        data.OwnerId,
-//		PhotoUrl:         data.PhotoUrl,
-//		IsPrivate:        data.IsPrivate,
-//		CountSubscribers: data.CountSubscribers,
-//	}
 //	return &out, err
 //}
 //
