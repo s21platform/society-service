@@ -102,6 +102,11 @@ func (s *Server) UpdateSociety(ctx context.Context, in *society.UpdateSocietyIn)
 		return nil, status.Error(codes.InvalidArgument, "societyUUID not provided")
 	}
 
+	if in.Name == "" {
+		logger.Error("failed to Name society is empty")
+		return nil, status.Error(codes.InvalidArgument, "failed to name not provided")
+	}
+
 	err := s.dbR.UpdateSociety(in, uuid)
 
 	if err != nil {
