@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"context"
+	"fmt"
 
 	society "github.com/s21platform/society-proto/society-proto"
 	"github.com/s21platform/society-service/internal/config"
@@ -43,6 +44,44 @@ func (s *Server) CreateSociety(ctx context.Context, in *society.SetSocietyIn) (*
 		return nil, err
 	}
 	return &society.SetSocietyOut{SocietyUUID: societyUUID}, status.Error(codes.OK, "success")
+}
+
+func (s *Server) GetSocietyWithOffset(ctx context.Context, in *society.GetSocietyWithOffsetIn) (*society.GetSocietyWithOffsetOut, error) {
+	uuid, ok := ctx.Value(config.KeyUUID).(string)
+	if !ok {
+		return nil, status.Error(codes.Internal, "uuid not found in context")
+	}
+
+	withOffsetData := model.WithOffsetData{
+		Limit:  in.Limit,
+		Offset: in.Offset,
+		Name:   in.Name,
+		Uuid:   uuid,
+	}
+	data, err := s.dbR.GetSocietyWithOffset(&withOffsetData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get society with offset: %v", err)
+	}
+	count, err := s.dbR.GetCountSocietyWithOffset(&withOffsetData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get count society with offset: %v", err)
+	}
+	out := society.GetSocietyWithOffsetOut{
+		Societies: make([]*society.Society, len(*data)),
+		Total:     count,
+	}
+	for j, i := range *data {
+		level := &society.Society{
+			SocietyUUID: i.SocietyUUID,
+			Name:        i.Name,
+			PhotoURL:    i.PhotoURL,
+			IsMember:    i.IsMember,
+			IsPrivate:   i.IsPrivate,
+		}
+		out.Societies[j] = level
+	}
+
+	return &out, err
 }
 
 //func (s *Server) GetAccessLevel(context.Context, *society.EmptySociety) (*society.GetAccessLevelOut, error) {

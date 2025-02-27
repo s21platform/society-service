@@ -8,6 +8,26 @@ type SocietyData struct {
 	OwnerUUID      string
 }
 
+type SocietyWithOffset struct {
+	Society []SocietyWithOffsetData
+	Total   int64
+}
+
+type SocietyWithOffsetData struct {
+	SocietyUUID string `db:"id"`
+	Name        string `db:"name"`
+	PhotoURL    string `db:"photo_url"`
+	IsMember    bool   `db:"is_member"`
+	IsPrivate   bool   `db:"is_private"`
+}
+
+type WithOffsetData struct {
+	Limit  int64
+	Offset int64
+	Name   string
+	Uuid   string
+}
+
 //
 //type AccessLevel struct {
 //	Id          int64  `db:"id"`

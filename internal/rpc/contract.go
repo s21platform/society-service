@@ -5,4 +5,6 @@ import "github.com/s21platform/society-service/internal/model"
 
 type DbRepo interface {
 	CreateSociety(socData *model.SocietyData) (string, error)
+	GetSocietyWithOffset(data *model.WithOffsetData) (*[]model.SocietyWithOffsetData, error)
+	GetCountSocietyWithOffset(data *model.WithOffsetData) (int64, error)
 }

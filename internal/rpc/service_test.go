@@ -5,6 +5,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/s21platform/society-service/internal/model"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -104,6 +106,124 @@ func TestServer_CreateSociety(t *testing.T) {
 		assert.Equal(t, codes.InvalidArgument, statusErr.Code())
 		assert.Equal(t, "name not provided", statusErr.Message())
 
+		assert.Nil(t, result)
+	})
+}
+
+func TestServer_GetSocietyWithOffset(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockDBRepo := NewMockDbRepo(ctrl)
+
+	s := &Server{dbR: mockDBRepo}
+
+	t.Run("should_get_society_with_offset", func(t *testing.T) {
+		userUUID := uuid.Generate().String()
+		ctx := context.WithValue(context.Background(), config.KeyUUID, userUUID)
+
+		mockInput := &society.GetSocietyWithOffsetIn{
+			Limit:  10,
+			Offset: 0,
+			Name:   "Test Society",
+		}
+
+		// Корректная инициализация mockData
+		mockData := []model.SocietyWithOffsetData{
+			{
+				SocietyUUID: uuid.Generate().String(),
+				Name:        "Test Society 1",
+				PhotoURL:    "http://example.com/photo1.jpg",
+				IsMember:    true,
+				IsPrivate:   false,
+			},
+			{
+				SocietyUUID: uuid.Generate().String(),
+				Name:        "Test Society 2",
+				PhotoURL:    "http://example.com/photo2.jpg",
+				IsMember:    false,
+				IsPrivate:   true,
+			},
+		}
+
+		// Ожидаем вызов GetSocietyWithOffset с любыми аргументами и возвращаем mockData
+		mockDBRepo.EXPECT().GetSocietyWithOffset(gomock.Any()).Return(&mockData, nil)
+		// Ожидаем вызов GetCountSocietyWithOffset с любыми аргументами и возвращаем количество элементов
+		mockDBRepo.EXPECT().GetCountSocietyWithOffset(gomock.Any()).Return(int64(len(mockData)), nil)
+
+		result, err := s.GetSocietyWithOffset(ctx, mockInput)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Equal(t, len(mockData), len(result.Societies))
+		assert.Equal(t, int64(len(mockData)), result.Total)
+	})
+
+	t.Run("should_return_error_if_uuid_not_found_in_context", func(t *testing.T) {
+		ctx := context.Background()
+		mockInput := &society.GetSocietyWithOffsetIn{
+			Limit:  10,
+			Offset: 0,
+			Name:   "Test Society",
+		}
+
+		result, err := s.GetSocietyWithOffset(ctx, mockInput)
+
+		assert.Nil(t, result)
+		assert.Error(t, err)
+		assert.Equal(t, codes.Internal, status.Code(err))
+	})
+
+	t.Run("should_return_error_if_dbR_GetSocietyWithOffset_fails", func(t *testing.T) {
+		userUUID := uuid.Generate().String()
+		ctx := context.WithValue(context.Background(), config.KeyUUID, userUUID)
+
+		mockInput := &society.GetSocietyWithOffsetIn{
+			Limit:  10,
+			Offset: 0,
+			Name:   "Test Society",
+		}
+
+		expectedError := errors.New("database error")
+		mockDBRepo.EXPECT().GetSocietyWithOffset(gomock.Any()).Return(nil, expectedError)
+
+		result, err := s.GetSocietyWithOffset(ctx, mockInput)
+
+		assert.Error(t, err)
+		assert.Equal(t, expectedError, err)
+		assert.Nil(t, result)
+	})
+
+	t.Run("should_return_error_if_dbR_GetCountSocietyWithOffset_fails", func(t *testing.T) {
+		userUUID := uuid.Generate().String()
+		ctx := context.WithValue(context.Background(), config.KeyUUID, userUUID)
+
+		mockInput := &society.GetSocietyWithOffsetIn{
+			Limit:  10,
+			Offset: 0,
+			Name:   "Test Society",
+		}
+
+		mockData := []model.SocietyWithOffsetData{
+			{
+				SocietyUUID: uuid.Generate().String(),
+				Name:        "Test Society 1",
+				PhotoURL:    "http://example.com/photo1.jpg",
+				IsMember:    true,
+				IsPrivate:   false,
+			},
+		}
+
+		expectedError := errors.New("database error")
+		mockDBRepo.EXPECT().GetSocietyWithOffset(gomock.Any()).Return(&mockData, nil)
+		mockDBRepo.EXPECT().GetCountSocietyWithOffset(gomock.Any()).Return(int64(0), expectedError)
+
+		result, err := s.GetSocietyWithOffset(ctx, mockInput)
+
+		assert.Error(t, err)
+		assert.Equal(t, expectedError, err)
 		assert.Nil(t, result)
 	})
 }
