@@ -115,7 +115,16 @@ func (r *Repository) GetSocietyInfo(societyUUID string) (*model.SocietyInfo, err
 		LeftJoin("members_requests mr ON s.id = mr.society_id AND mr.status_id = 1").
 		LeftJoin("society_has_tags sha ON s.id = sha.society_id AND sha.is_active = TRUE").
 		Where(squirrel.Eq{"s.id": societyUUID}).
-		GroupBy("s.id")
+		GroupBy(
+			"s.id",
+			"s.name",
+			"s.description",
+			"s.owner_uuid",
+			"s.photo_url",
+			"s.format_id",
+			"s.post_permission_id",
+			"s.is_search",
+		)
 
 	sql, args, err := query.ToSql()
 	if err != nil {
