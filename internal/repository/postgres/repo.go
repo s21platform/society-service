@@ -5,8 +5,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/Masterminds/squirrel"
-
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 
@@ -102,7 +100,7 @@ func (r *Repository) GetSocietyInfo(societyUUID string) (*model.SocietyInfo, err
 		From("society s").
 		LeftJoin("members_requests mr ON s.id = mr.society_id AND mr.status_id = 1").
 		LeftJoin("society_has_tags sha ON s.id = sha.society_id AND sha.is_active = TRUE").
-		Where(squirrel.Eq{"s.id": societyUUID}).
+		Where(sq.Eq{"s.id": societyUUID}).
 		GroupBy(
 			"s.id",
 			"s.name",
@@ -112,11 +110,12 @@ func (r *Repository) GetSocietyInfo(societyUUID string) (*model.SocietyInfo, err
 			"s.format_id",
 			"s.post_permission_id",
 			"s.is_search",
-		)
+		).
+		PlaceholderFormat(sq.Dollar)
 
 	sql, args, err := query.ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("failed to build SQL query: %v", err)
+		return nil, fmt.Errorf("failed to build SQL query: %w", err)
 	}
 
 	row := r.connection.QueryRow(sql, args...)
@@ -132,7 +131,7 @@ func (r *Repository) GetSocietyInfo(societyUUID string) (*model.SocietyInfo, err
 		&tags,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to scan society info: %v", err)
+		return nil, fmt.Errorf("failed to scan society info: %w", err)
 	}
 
 	societyInfo.TagsID = tags
@@ -140,8 +139,12 @@ func (r *Repository) GetSocietyInfo(societyUUID string) (*model.SocietyInfo, err
 }
 
 func (r *Repository) UpdateSociety(societyData *society.UpdateSocietyIn, peerUUID string) error {
-	if !isOwnerAdminModerator(peerUUID, societyData.SocietyUUID, r) {
-		return fmt.Errorf("failed to peer not Owner, Admin or Moderator to update society")
+	isAllowed, err := isOwnerAdminModerator(peerUUID, societyData.SocietyUUID, r)
+	if err != nil {
+		return fmt.Errorf("failed to check user permissions: %w", err)
+	}
+	if !isAllowed {
+		return fmt.Errorf("failed to user is not Owner, Admin or Moderator")
 	}
 
 	query := sq.Update("society").
@@ -151,37 +154,39 @@ func (r *Repository) UpdateSociety(societyData *society.UpdateSocietyIn, peerUUI
 		Set("format_id", societyData.FormatID).
 		Set("post_permission_id", societyData.PostPermission).
 		Set("is_search", societyData.IsSearch).
-		Where(squirrel.Eq{"id": societyData.SocietyUUID})
+		Where(sq.Eq{"id": societyData.SocietyUUID}).
+		PlaceholderFormat(sq.Dollar) // Гарантируем использование $1, $2...
 
 	sql, args, err := query.ToSql()
 	if err != nil {
-		return fmt.Errorf("failed to build SQL query: %v", err)
+		return fmt.Errorf("failed to build SQL query: %w", err)
 	}
 
 	_, err = r.connection.Exec(sql, args...)
 	if err != nil {
-		return fmt.Errorf("failed to update society: %v", err)
+		return fmt.Errorf("failed to update society: %w", err)
 	}
 
 	return nil
 }
 
-func isOwnerAdminModerator(peerUUID, societyUUID string, r *Repository) bool {
+func isOwnerAdminModerator(peerUUID, societyUUID string, r *Repository) (bool, error) {
 	var role int
 
 	query := sq.Select("role").
 		From("society_members").
-		Where(squirrel.Eq{"society_id": societyUUID, "user_uuid": peerUUID})
+		Where(sq.Eq{"society_id": societyUUID, "user_uuid": peerUUID}).
+		PlaceholderFormat(sq.Dollar)
 
 	sql, args, err := query.ToSql()
 	if err != nil {
-		return false
+		return false, fmt.Errorf("failed to build SQL query: %w", err)
 	}
 
-	err = r.connection.QueryRowx(sql, args...).Scan(&role)
+	err = r.connection.QueryRow(sql, args...).Scan(&role)
 	if err != nil {
-		return false
+		return false, fmt.Errorf("failed to fetch user role: %w", err)
 	}
 
-	return role == 1 || role == 2 || role == 3
+	return role == 1 || role == 2 || role == 3, nil
 }
