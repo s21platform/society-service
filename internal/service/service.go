@@ -1,8 +1,10 @@
-package rpc
+package service
 
 import (
 	"context"
 	"fmt"
+
+	logger_lib "github.com/s21platform/logger-lib"
 
 	society "github.com/s21platform/society-proto/society-proto"
 	"github.com/s21platform/society-service/internal/config"
@@ -24,11 +26,15 @@ func New(repo DbRepo) *Server {
 
 func (s *Server) CreateSociety(ctx context.Context, in *society.SetSocietyIn) (*society.SetSocietyOut, error) {
 	uuid, ok := ctx.Value(config.KeyUUID).(string)
+	logger := logger_lib.FromContext(ctx, config.KeyLogger)
+	logger.AddFuncName("CreateSociety")
 	if !ok {
+		logger.Error("failed to not found UUID in context")
 		return nil, status.Error(codes.Internal, "uuid not found in context")
 	}
 
 	if in.Name == "" {
+		logger.Error("failed to Name society is empty")
 		return nil, status.Error(codes.InvalidArgument, "name not provided")
 	}
 
@@ -41,9 +47,45 @@ func (s *Server) CreateSociety(ctx context.Context, in *society.SetSocietyIn) (*
 	}
 	societyUUID, err := s.dbR.CreateSociety(&SocietyData)
 	if err != nil {
+		logger.Error("failed to CreateSociety from BD")
 		return nil, err
 	}
 	return &society.SetSocietyOut{SocietyUUID: societyUUID}, status.Error(codes.OK, "success")
+}
+
+func (s *Server) GetSocietyInfo(ctx context.Context, in *society.GetSocietyInfoIn) (*society.GetSocietyInfoOut, error) {
+	logger := logger_lib.FromContext(ctx, config.KeyLogger)
+	logger.AddFuncName("GetSocietyInfo")
+
+	if in.SocietyUUID == "" {
+		logger.Error("failed to SocietyUUID is empty")
+		return nil, status.Error(codes.InvalidArgument, "societyUUID not provided")
+	}
+
+	societyInfo, err := s.dbR.GetSocietyInfo(in.SocietyUUID)
+
+	if err != nil {
+		logger.Error("failed to GetSocietyInfo from BD")
+		return nil, err
+	}
+
+	var tags []*society.TagsID
+	for _, tag := range societyInfo.TagsID {
+		tags = append(tags, &society.TagsID{TagID: tag})
+	}
+
+	out := &society.GetSocietyInfoOut{
+		Name:           societyInfo.Name,
+		Description:    societyInfo.Description,
+		OwnerUUID:      societyInfo.OwnerUUID,
+		PhotoURL:       societyInfo.PhotoURL,
+		FormatID:       societyInfo.FormatID,
+		PostPermission: societyInfo.PostPermission,
+		IsSearch:       societyInfo.IsSearch,
+		CountSubscribe: societyInfo.CountSubscribe,
+		TagsID:         tags,
+	}
+	return out, nil
 }
 
 func (s *Server) GetSocietyWithOffset(ctx context.Context, in *society.GetSocietyWithOffsetIn) (*society.GetSocietyWithOffsetOut, error) {
