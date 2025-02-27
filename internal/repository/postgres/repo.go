@@ -6,10 +6,12 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
+
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 
+	sq "github.com/Masterminds/squirrel"
 	society "github.com/s21platform/society-proto/society-proto"
 	"github.com/s21platform/society-service/internal/config"
 	"github.com/s21platform/society-service/internal/model"
@@ -17,7 +19,6 @@ import (
 
 type Repository struct {
 	connection *sqlx.DB
-	sb         squirrel.StatementBuilderType
 }
 
 func connect(cfg *config.Config) (*Repository, error) {
@@ -31,7 +32,6 @@ func connect(cfg *config.Config) (*Repository, error) {
 
 	return &Repository{
 		connection: db,
-		sb:         squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar),
 	}, nil
 }
 
@@ -59,7 +59,7 @@ func (r *Repository) Close() {
 func (r *Repository) CreateSociety(socData *model.SocietyData) (string, error) {
 	var societyUUIDStr string
 
-	query := r.sb.Insert("society").
+	query := sq.Insert("society").
 		Columns("name", "description", "owner_uuid", "format_id", "post_permission_id", "is_search").
 		Values(socData.Name, "", socData.OwnerUUID, socData.FormatID, socData.PostPermission, socData.IsSearch).
 		Suffix("RETURNING id")
@@ -79,7 +79,7 @@ func (r *Repository) CreateSociety(socData *model.SocietyData) (string, error) {
 		return "", fmt.Errorf("failed to parse UUID: %v", err)
 	}
 
-	query = r.sb.Insert("society_members").
+	query = sq.Insert("society_members").
 		Columns("society_id", "user_uuid", "role", "payment_status").
 		Values(societyUUID, socData.OwnerUUID, 1, 1)
 
@@ -100,7 +100,7 @@ func (r *Repository) GetSocietyInfo(societyUUID string) (*model.SocietyInfo, err
 	var societyInfo model.SocietyInfo
 	var tags pq.Int64Array
 
-	query := r.sb.Select(
+	query := sq.Select(
 		"s.name",
 		"s.description",
 		"s.owner_uuid",
@@ -147,7 +147,7 @@ func (r *Repository) UpdateSociety(societyData *society.UpdateSocietyIn, peerUUI
 		return fmt.Errorf("failed to peer not Owner, Admin or Moderator to update society")
 	}
 
-	query := r.sb.Update("society").
+	query := sq.Update("society").
 		Set("name", societyData.Name).
 		Set("description", societyData.Description).
 		Set("photo_url", societyData.PhotoURL).
@@ -172,7 +172,7 @@ func (r *Repository) UpdateSociety(societyData *society.UpdateSocietyIn, peerUUI
 func isOwnerAdminModerator(peerUUID, societyUUID string, r *Repository) bool {
 	var role int
 
-	query := r.sb.Select("role").
+	query := sq.Select("role").
 		From("society_members").
 		Where(squirrel.Eq{"society_id": societyUUID, "user_uuid": peerUUID})
 
