@@ -7,7 +7,6 @@ import (
 
 	"github.com/Masterminds/squirrel"
 
-	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 
@@ -57,43 +56,32 @@ func (r *Repository) Close() {
 }
 
 func (r *Repository) CreateSociety(socData *model.SocietyData) (string, error) {
-	var societyUUIDStr string
+	var societyUUID string
 
 	query := sq.Insert("society").
 		Columns("name", "owner_uuid", "format_id", "post_permission_id", "is_search").
 		Values(socData.Name, socData.OwnerUUID, socData.FormatID, socData.PostPermission, socData.IsSearch).
-		Suffix("RETURNING id")
+		Suffix("RETURNING id").
+		PlaceholderFormat(sq.Dollar).
+		RunWith(r.connection)
 
-	sql, args, err := query.ToSql()
-	if err != nil {
-		return "", fmt.Errorf("failed to build SQL query: %v", err)
-	}
-
-	err = r.connection.QueryRowx(sql, args...).Scan(&societyUUIDStr)
+	err := query.QueryRow().Scan(&societyUUID)
 	if err != nil {
 		return "", fmt.Errorf("failed to insert society: %v", err)
 	}
 
-	societyUUID, err := uuid.Parse(societyUUIDStr)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse UUID: %v", err)
-	}
-
 	query = sq.Insert("society_members").
 		Columns("society_id", "user_uuid", "role", "payment_status").
-		Values(societyUUID, socData.OwnerUUID, 1, 1)
+		Values(societyUUID, socData.OwnerUUID, 1, 1).
+		PlaceholderFormat(sq.Dollar).
+		RunWith(r.connection)
 
-	sql, args, err = query.ToSql()
-	if err != nil {
-		return "", fmt.Errorf("failed to build SQL query: %v", err)
-	}
-
-	_, err = r.connection.Exec(sql, args...)
+	_, err = query.Exec()
 	if err != nil {
 		return "", fmt.Errorf("failed to insert society member: %v", err)
 	}
 
-	return societyUUID.String(), nil
+	return societyUUID, nil
 }
 
 func (r *Repository) GetSocietyInfo(societyUUID string) (*model.SocietyInfo, error) {
