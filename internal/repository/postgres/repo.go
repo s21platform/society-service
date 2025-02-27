@@ -195,8 +195,5 @@ func isOwnerAdminModerator(peerUUID, societyUUID string, r *Repository) bool {
 		return false
 	}
 
-	if role != 1 || role != 2 || role != 3 {
-		return false
-	}
-	return true
+	return role == 1 || role == 2 || role == 3
 }
