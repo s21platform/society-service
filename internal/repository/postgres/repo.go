@@ -60,8 +60,8 @@ func (r *Repository) CreateSociety(socData *model.SocietyData) (string, error) {
 	var societyUUIDStr string
 
 	query := sq.Insert("society").
-		Columns("name", "description", "owner_uuid", "format_id", "post_permission_id", "is_search").
-		Values(socData.Name, "", socData.OwnerUUID, socData.FormatID, socData.PostPermission, socData.IsSearch).
+		Columns("name", "owner_uuid", "format_id", "post_permission_id", "is_search").
+		Values(socData.Name, socData.OwnerUUID, socData.FormatID, socData.PostPermission, socData.IsSearch).
 		Suffix("RETURNING id")
 
 	sql, args, err := query.ToSql()
@@ -195,5 +195,8 @@ func isOwnerAdminModerator(peerUUID, societyUUID string, r *Repository) bool {
 		return false
 	}
 
-	return role == 1 || role == 2 || role == 3
+	if role != 1 || role != 2 || role != 3 {
+		return false
+	}
+	return true
 }
