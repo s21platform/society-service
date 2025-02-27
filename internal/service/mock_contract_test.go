@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	society_proto "github.com/s21platform/society-proto/society-proto"
 	model "github.com/s21platform/society-service/internal/model"
 )
 
@@ -62,4 +63,18 @@ func (m *MockDbRepo) GetSocietyInfo(societyUUID string) (*model.SocietyInfo, err
 func (mr *MockDbRepoMockRecorder) GetSocietyInfo(societyUUID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSocietyInfo", reflect.TypeOf((*MockDbRepo)(nil).GetSocietyInfo), societyUUID)
+}
+
+// UpdateSociety mocks base method.
+func (m *MockDbRepo) UpdateSociety(societyData *society_proto.UpdateSocietyIn, ownerUUID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateSociety", societyData, ownerUUID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateSociety indicates an expected call of UpdateSociety.
+func (mr *MockDbRepoMockRecorder) UpdateSociety(societyData, ownerUUID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSociety", reflect.TypeOf((*MockDbRepo)(nil).UpdateSociety), societyData, ownerUUID)
 }
