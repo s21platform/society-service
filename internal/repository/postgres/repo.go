@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"time"
@@ -85,6 +86,7 @@ func (r *Repository) CreateSociety(socData *model.SocietyData) (string, error) {
 func (r *Repository) GetSocietyInfo(societyUUID string) (*model.SocietyInfo, error) {
 	var societyInfo model.SocietyInfo
 	var tags pq.Int64Array
+	var description sql.NullString
 
 	query := sq.Select(
 		"s.name",
@@ -121,7 +123,7 @@ func (r *Repository) GetSocietyInfo(societyUUID string) (*model.SocietyInfo, err
 	row := r.connection.QueryRow(sql, args...)
 	err = row.Scan(
 		&societyInfo.Name,
-		&societyInfo.Description,
+		&description, // Используем sql.NullString
 		&societyInfo.OwnerUUID,
 		&societyInfo.PhotoURL,
 		&societyInfo.FormatID,
@@ -132,6 +134,11 @@ func (r *Repository) GetSocietyInfo(societyUUID string) (*model.SocietyInfo, err
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to scan society info: %w", err)
+	}
+
+	societyInfo.Description = ""
+	if description.Valid {
+		societyInfo.Description = description.String
 	}
 
 	societyInfo.TagsID = tags
