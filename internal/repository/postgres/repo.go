@@ -223,10 +223,20 @@ func isOwnerAdminModerator(peerUUID, societyUUID string, r *Repository) (bool, e
 		return false, fmt.Errorf("failed to build SQL query: %w", err)
 	}
 
-	err = r.connection.QueryRow(sql, args...).Scan(&role)
+	var result []struct {
+		Role int `db:"role"`
+	}
+
+	err = sqlx.Select(r.connection, &result, sql, args...)
 	if err != nil {
 		return false, fmt.Errorf("failed to fetch user role: %w", err)
 	}
+
+	if len(result) == 0 {
+		return false, fmt.Errorf("user not found or invalid role")
+	}
+
+	role = result[0].Role
 
 	return role == 1 || role == 2 || role == 3, nil
 }
