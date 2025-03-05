@@ -1,15 +1,13 @@
 package postgres
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
-
 	sq "github.com/Masterminds/squirrel"
+	"github.com/jmoiron/sqlx"
 	society "github.com/s21platform/society-proto/society-proto"
 	"github.com/s21platform/society-service/internal/config"
 	"github.com/s21platform/society-service/internal/model"
@@ -55,29 +53,49 @@ func (r *Repository) Close() {
 }
 
 func (r *Repository) CreateSociety(socData *model.SocietyData) (string, error) {
+	tx, err := r.connection.Beginx()
+	if err != nil {
+		return "", fmt.Errorf("failed to start transaction: %w", err)
+	}
+
 	var societyUUID string
 
-	query := sq.Insert("society").
+	query, args, err := sq.Insert("society").
 		Columns("name", "owner_uuid", "format_id", "post_permission_id", "is_search").
 		Values(socData.Name, socData.OwnerUUID, socData.FormatID, socData.PostPermission, socData.IsSearch).
 		Suffix("RETURNING id").
 		PlaceholderFormat(sq.Dollar).
-		RunWith(r.connection)
-
-	err := query.QueryRow().Scan(&societyUUID)
+		ToSql()
 	if err != nil {
-		return "", fmt.Errorf("failed to insert society: %v", err)
+		_ = tx.Rollback()
+		return "", fmt.Errorf("failed to build society insert query: %w", err)
 	}
 
-	query = sq.Insert("society_members").
+	err = tx.Get(&societyUUID, query, args...)
+	if err != nil {
+		_ = tx.Rollback()
+		return "", fmt.Errorf("failed to insert society: %w", err)
+	}
+
+	query, args, err = sq.Insert("society_members").
 		Columns("society_id", "user_uuid", "role", "payment_status").
 		Values(societyUUID, socData.OwnerUUID, 1, 1).
 		PlaceholderFormat(sq.Dollar).
-		RunWith(r.connection)
-
-	_, err = query.Exec()
+		ToSql()
 	if err != nil {
-		return "", fmt.Errorf("failed to insert society member: %v", err)
+		_ = tx.Rollback()
+		return "", fmt.Errorf("failed to build society_members insert query: %w", err)
+	}
+
+	_, err = tx.Exec(query, args...)
+	if err != nil {
+		_ = tx.Rollback()
+		return "", fmt.Errorf("failed to insert society member: %w", err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return "", fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return societyUUID, nil
@@ -85,8 +103,6 @@ func (r *Repository) CreateSociety(socData *model.SocietyData) (string, error) {
 
 func (r *Repository) GetSocietyInfo(societyUUID string) (*model.SocietyInfo, error) {
 	var societyInfo model.SocietyInfo
-	var tags pq.Int64Array
-	var description sql.NullString
 
 	query := sq.Select(
 		"s.name",
@@ -96,53 +112,70 @@ func (r *Repository) GetSocietyInfo(societyUUID string) (*model.SocietyInfo, err
 		"s.format_id",
 		"s.post_permission_id",
 		"s.is_search",
-		"COALESCE(COUNT(mr.user_uuid), 0) AS count_subscribe",
-		"ARRAY_REMOVE(ARRAY_AGG(sha.tag_id), NULL) AS tags_id",
 	).
 		From("society s").
-		LeftJoin("members_requests mr ON s.id = mr.society_id AND mr.status_id = 1").
-		LeftJoin("society_has_tags sha ON s.id = sha.society_id AND sha.is_active = TRUE").
 		Where(sq.Eq{"s.id": societyUUID}).
-		GroupBy(
-			"s.id",
-			"s.name",
-			"s.description",
-			"s.owner_uuid",
-			"s.photo_url",
-			"s.format_id",
-			"s.post_permission_id",
-			"s.is_search",
-		).
 		PlaceholderFormat(sq.Dollar)
 
-	sql, args, err := query.ToSql()
+	sqlString, args, err := query.ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build SQL query: %w", err)
 	}
 
-	row := r.connection.QueryRow(sql, args...)
-	err = row.Scan(
-		&societyInfo.Name,
-		&description, // Используем sql.NullString
-		&societyInfo.OwnerUUID,
-		&societyInfo.PhotoURL,
-		&societyInfo.FormatID,
-		&societyInfo.PostPermission,
-		&societyInfo.IsSearch,
-		&societyInfo.CountSubscribe,
-		&tags,
-	)
+	err = r.connection.GetContext(context.Background(), &societyInfo, sqlString, args...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to scan society info: %w", err)
+		return nil, fmt.Errorf("failed to get society info: %w", err)
 	}
 
-	societyInfo.Description = ""
-	if description.Valid {
-		societyInfo.Description = description.String
+	if !societyInfo.Description.Valid {
+		societyInfo.Description.String = ""
 	}
 
+	count, err := r.CountSubscribe(societyUUID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get count of subscribers: %w", err)
+	}
+	societyInfo.CountSubscribe = count
+
+	tags, err := r.GetTags(societyUUID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tags: %w", err)
+	}
 	societyInfo.TagsID = tags
+
 	return &societyInfo, nil
+}
+
+func (r *Repository) GetTags(societyUUID string) ([]int64, error) {
+	query := sq.Select("tag_id").
+		From("society_has_tags").
+		Where(sq.Eq{"society_id": societyUUID})
+
+	sqlString, args, err := query.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build SQL query GetTags: %w", err)
+	}
+
+	var tags []int64
+	err = r.connection.Select(&tags, sqlString, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute query GetTags: %w", err)
+	}
+	return tags, nil
+}
+
+func (r *Repository) CountSubscribe(societyUUID string) (int64, error) {
+	query := sq.Select("count(*)").From("society_members").Where(sq.Eq{"society_id": societyUUID})
+	sqlString, args, err := query.ToSql()
+	if err != nil {
+		return 0, fmt.Errorf("failed to build SQL query CountSubscribe: %w", err)
+	}
+	var counts []int64
+	err = r.connection.Select(&counts, sqlString, args...)
+	if err != nil {
+		return 0, fmt.Errorf("failed to execute query CountSubscribe: %w", err)
+	}
+	return counts[0], nil
 }
 
 func (r *Repository) UpdateSociety(societyData *society.UpdateSocietyIn, peerUUID string) error {
@@ -162,7 +195,7 @@ func (r *Repository) UpdateSociety(societyData *society.UpdateSocietyIn, peerUUI
 		Set("post_permission_id", societyData.PostPermission).
 		Set("is_search", societyData.IsSearch).
 		Where(sq.Eq{"id": societyData.SocietyUUID}).
-		PlaceholderFormat(sq.Dollar) // Гарантируем использование $1, $2...
+		PlaceholderFormat(sq.Dollar)
 
 	sql, args, err := query.ToSql()
 	if err != nil {

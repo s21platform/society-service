@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"testing"
 
@@ -142,9 +143,10 @@ func TestServer_GetSocietyInfo(t *testing.T) {
 		societyUUID := uuid.Generate().String()
 		mockInput := &society.GetSocietyInfoIn{SocietyUUID: societyUUID}
 
+		// Используем sql.NullString для Description
 		expectedSocietyInfo := &model.SocietyInfo{
 			Name:           "Test Society",
-			Description:    "A test society",
+			Description:    sql.NullString{String: "A test society", Valid: true}, // исправлено
 			OwnerUUID:      uuid.Generate().String(),
 			PhotoURL:       "https://example.com/photo.jpg",
 			FormatID:       1,
@@ -161,7 +163,7 @@ func TestServer_GetSocietyInfo(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, expectedSocietyInfo.Name, result.Name)
-		assert.Equal(t, expectedSocietyInfo.Description, result.Description)
+		assert.Equal(t, expectedSocietyInfo.Description.String, result.Description) // исправлено
 		assert.Equal(t, expectedSocietyInfo.OwnerUUID, result.OwnerUUID)
 		assert.Equal(t, expectedSocietyInfo.PhotoURL, result.PhotoURL)
 		assert.Equal(t, expectedSocietyInfo.FormatID, result.FormatID)

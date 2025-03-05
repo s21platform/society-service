@@ -73,9 +73,14 @@ func (s *Server) GetSocietyInfo(ctx context.Context, in *society.GetSocietyInfoI
 		tags = append(tags, &society.TagsID{TagID: tag})
 	}
 
+	description := ""
+	if societyInfo.Description.Valid {
+		description = societyInfo.Description.String
+	}
+
 	out := &society.GetSocietyInfoOut{
 		Name:           societyInfo.Name,
-		Description:    societyInfo.Description,
+		Description:    description,
 		OwnerUUID:      societyInfo.OwnerUUID,
 		PhotoURL:       societyInfo.PhotoURL,
 		FormatID:       societyInfo.FormatID,
