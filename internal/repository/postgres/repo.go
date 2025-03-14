@@ -79,7 +79,7 @@ func (r *Repository) CreateSociety(socData *model.SocietyData) (string, error) {
 
 	query, args, err = sq.Insert("society_members").
 		Columns("society_id", "user_uuid", "role", "payment_status").
-		Values(societyUUID, socData.OwnerUUID, 1, 1).
+		Values(societyUUID, socData.OwnerUUID, "1", "1").
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
@@ -147,11 +147,8 @@ func (r *Repository) GetSocietyInfo(societyUUID string) (*model.SocietyInfo, err
 }
 
 func (r *Repository) GetTags(societyUUID string) ([]int64, error) {
-	query := sq.Select("tag_id").
-		From("society_has_tags").
-		Where(sq.Eq{"society_id": societyUUID})
-
-	sqlString, args, err := query.ToSql()
+	query := sq.Select("tag_id").From("society_has_tags").Where(sq.Eq{"society_id": societyUUID})
+	sqlString, args, err := query.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build SQL query GetTags: %w", err)
 	}
@@ -166,16 +163,18 @@ func (r *Repository) GetTags(societyUUID string) ([]int64, error) {
 
 func (r *Repository) CountSubscribe(societyUUID string) (int64, error) {
 	query := sq.Select("count(*)").From("society_members").Where(sq.Eq{"society_id": societyUUID})
-	sqlString, args, err := query.ToSql()
+	sqlString, args, err := query.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		return 0, fmt.Errorf("failed to build SQL query CountSubscribe: %w", err)
 	}
-	var counts []int64
-	err = r.connection.Select(&counts, sqlString, args...)
+
+	var count int64
+	err = r.connection.Get(&count, sqlString, args...)
 	if err != nil {
 		return 0, fmt.Errorf("failed to execute query CountSubscribe: %w", err)
 	}
-	return counts[0], nil
+
+	return count, nil
 }
 
 func (r *Repository) UpdateSociety(societyData *society.UpdateSocietyIn, peerUUID string) error {

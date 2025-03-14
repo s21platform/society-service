@@ -6,10 +6,8 @@ require (
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/docker/distribution v2.8.3+incompatible
 	github.com/golang/mock v1.6.0
-	github.com/google/uuid v1.6.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/lib/pq v1.10.9
 	github.com/s21platform/logger-lib v0.0.6
 	github.com/s21platform/society-proto v0.0.21
 	github.com/stretchr/testify v1.10.0
@@ -23,6 +21,7 @@ require (
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
+	github.com/lib/pq v1.10.9 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
