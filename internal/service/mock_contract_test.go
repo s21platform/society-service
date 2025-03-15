@@ -35,6 +35,21 @@ func (m *MockDbRepo) EXPECT() *MockDbRepoMockRecorder {
 	return m.recorder
 }
 
+// CountSubscribe mocks base method.
+func (m *MockDbRepo) CountSubscribe(societyUUID string) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountSubscribe", societyUUID)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountSubscribe indicates an expected call of CountSubscribe.
+func (mr *MockDbRepoMockRecorder) CountSubscribe(societyUUID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountSubscribe", reflect.TypeOf((*MockDbRepo)(nil).CountSubscribe), societyUUID)
+}
+
 // CreateSociety mocks base method.
 func (m *MockDbRepo) CreateSociety(socData *model.SocietyData) (string, error) {
 	m.ctrl.T.Helper()
@@ -65,16 +80,46 @@ func (mr *MockDbRepoMockRecorder) GetSocietyInfo(societyUUID interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSocietyInfo", reflect.TypeOf((*MockDbRepo)(nil).GetSocietyInfo), societyUUID)
 }
 
-// UpdateSociety mocks base method.
-func (m *MockDbRepo) UpdateSociety(societyData *society_proto.UpdateSocietyIn, ownerUUID string) error {
+// GetTags mocks base method.
+func (m *MockDbRepo) GetTags(societyUUID string) ([]int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateSociety", societyData, ownerUUID)
+	ret := m.ctrl.Call(m, "GetTags", societyUUID)
+	ret0, _ := ret[0].([]int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTags indicates an expected call of GetTags.
+func (mr *MockDbRepoMockRecorder) GetTags(societyUUID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTags", reflect.TypeOf((*MockDbRepo)(nil).GetTags), societyUUID)
+}
+
+// IsOwnerAdminModerator mocks base method.
+func (m *MockDbRepo) IsOwnerAdminModerator(peerUUID, societyUUID string) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsOwnerAdminModerator", peerUUID, societyUUID)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsOwnerAdminModerator indicates an expected call of IsOwnerAdminModerator.
+func (mr *MockDbRepoMockRecorder) IsOwnerAdminModerator(peerUUID, societyUUID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsOwnerAdminModerator", reflect.TypeOf((*MockDbRepo)(nil).IsOwnerAdminModerator), peerUUID, societyUUID)
+}
+
+// UpdateSociety mocks base method.
+func (m *MockDbRepo) UpdateSociety(societyData *society_proto.UpdateSocietyIn) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateSociety", societyData)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateSociety indicates an expected call of UpdateSociety.
-func (mr *MockDbRepoMockRecorder) UpdateSociety(societyData, ownerUUID interface{}) *gomock.Call {
+func (mr *MockDbRepoMockRecorder) UpdateSociety(societyData interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSociety", reflect.TypeOf((*MockDbRepo)(nil).UpdateSociety), societyData, ownerUUID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSociety", reflect.TypeOf((*MockDbRepo)(nil).UpdateSociety), societyData)
 }

@@ -126,23 +126,6 @@ func (r *Repository) GetSocietyInfo(societyUUID string) (*model.SocietyInfo, err
 	if err != nil {
 		return nil, fmt.Errorf("failed to get society info: %w", err)
 	}
-
-	if !societyInfo.Description.Valid {
-		societyInfo.Description.String = ""
-	}
-
-	count, err := r.CountSubscribe(societyUUID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get count of subscribers: %w", err)
-	}
-	societyInfo.CountSubscribe = count
-
-	tags, err := r.GetTags(societyUUID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get tags: %w", err)
-	}
-	societyInfo.TagsID = tags
-
 	return &societyInfo, nil
 }
 
@@ -177,15 +160,7 @@ func (r *Repository) CountSubscribe(societyUUID string) (int64, error) {
 	return count, nil
 }
 
-func (r *Repository) UpdateSociety(societyData *society.UpdateSocietyIn, peerUUID string) error {
-	isAllowed, err := isOwnerAdminModerator(peerUUID, societyData.SocietyUUID, r)
-	if err != nil {
-		return fmt.Errorf("failed to check user permissions: %w", err)
-	}
-	if !isAllowed {
-		return fmt.Errorf("failed to user is not Owner, Admin or Moderator")
-	}
-
+func (r *Repository) UpdateSociety(societyData *society.UpdateSocietyIn) error {
 	query := sq.Update("society").
 		Set("name", societyData.Name).
 		Set("description", societyData.Description).
@@ -209,9 +184,7 @@ func (r *Repository) UpdateSociety(societyData *society.UpdateSocietyIn, peerUUI
 	return nil
 }
 
-func isOwnerAdminModerator(peerUUID, societyUUID string, r *Repository) (bool, error) {
-	var role int
-
+func (r *Repository) IsOwnerAdminModerator(peerUUID, societyUUID string) (int, error) {
 	query := sq.Select("role").
 		From("society_members").
 		Where(sq.Eq{"society_id": societyUUID, "user_uuid": peerUUID}).
@@ -219,23 +192,19 @@ func isOwnerAdminModerator(peerUUID, societyUUID string, r *Repository) (bool, e
 
 	sql, args, err := query.ToSql()
 	if err != nil {
-		return false, fmt.Errorf("failed to build SQL query: %w", err)
+		return 0, fmt.Errorf("failed to build SQL query: %w", err)
 	}
 
-	var result []struct {
-		Role int `db:"role"`
-	}
+	var result model.Role
 
 	err = sqlx.Select(r.connection, &result, sql, args...)
 	if err != nil {
-		return false, fmt.Errorf("failed to fetch user role: %w", err)
+		return 0, fmt.Errorf("failed to execute query isOwnerAdminModerator: %w", err)
 	}
 
 	if len(result) == 0 {
-		return false, fmt.Errorf("user not found or invalid role")
+		return 0, fmt.Errorf("user not found or invalid role")
 	}
 
-	role = result[0].Role
-
-	return role == 1 || role == 2 || role == 3, nil
+	return result[0].Role, nil
 }

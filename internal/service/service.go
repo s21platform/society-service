@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	logger_lib "github.com/s21platform/logger-lib"
 
@@ -68,6 +69,22 @@ func (s *Server) GetSocietyInfo(ctx context.Context, in *society.GetSocietyInfoI
 		return nil, err
 	}
 
+	if !societyInfo.Description.Valid {
+		societyInfo.Description.String = ""
+	}
+
+	count, err := s.dbR.CountSubscribe(in.SocietyUUID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get count of subscribers: %w", err)
+	}
+	societyInfo.CountSubscribe = count
+
+	getTag, err := s.dbR.GetTags(in.SocietyUUID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tags: %w", err)
+	}
+	societyInfo.TagsID = getTag
+
 	var tags []*society.TagsID
 	for _, tag := range societyInfo.TagsID {
 		tags = append(tags, &society.TagsID{TagID: tag})
@@ -112,7 +129,23 @@ func (s *Server) UpdateSociety(ctx context.Context, in *society.UpdateSocietyIn)
 		return nil, status.Error(codes.InvalidArgument, "failed to name not provided")
 	}
 
-	err := s.dbR.UpdateSociety(in, uuid)
+	isAllowed, err := s.dbR.IsOwnerAdminModerator(uuid, in.SocietyUUID)
+	if err != nil {
+		logger.Error("failed to IsOwnerAdminModerator from BD")
+		return nil, status.Error(codes.InvalidArgument, "failed to IsOwnerAdminModerator from BD")
+	}
+
+	if isAllowed == 0 {
+		logger.Error("failed to IsOwnerAdminModerator from BD")
+		return nil, status.Error(codes.InvalidArgument, "failed to IsOwnerAdminModerator from BD")
+	}
+
+	if isAllowed != 1 && isAllowed != 2 && isAllowed != 3 {
+		logger.Error("failed to IsOwnerAdminModerator from BD")
+		return nil, status.Error(codes.InvalidArgument, "failed to peer is not Owner, Admin or Moderator")
+	}
+
+	err = s.dbR.UpdateSociety(in)
 
 	if err != nil {
 		logger.Error("failed to UpdateSociety from BD")

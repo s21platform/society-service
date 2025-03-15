@@ -140,37 +140,50 @@ func TestServer_GetSocietyInfo(t *testing.T) {
 
 	t.Run("should_get_society_info_successfully", func(t *testing.T) {
 		ctx := context.WithValue(context.Background(), config.KeyLogger, mockLogger)
+
 		societyUUID := uuid.Generate().String()
+
 		mockInput := &society.GetSocietyInfoIn{SocietyUUID: societyUUID}
 
-		// Используем sql.NullString для Description
 		expectedSocietyInfo := &model.SocietyInfo{
 			Name:           "Test Society",
-			Description:    sql.NullString{String: "A test society", Valid: true}, // исправлено
+			Description:    sql.NullString{String: "A test society", Valid: true},
 			OwnerUUID:      uuid.Generate().String(),
 			PhotoURL:       "https://example.com/photo.jpg",
 			FormatID:       1,
 			PostPermission: 2,
 			IsSearch:       true,
-			CountSubscribe: 100,
+			CountSubscribe: 100, // Это значение будет перезаписано в ручке
 			TagsID:         []int64{1, 2},
 		}
 
+		expectedCountSubscribe := int64(150)
+
+		expectedTags := []int64{1, 2}
+
 		mockDBRepo.EXPECT().GetSocietyInfo(societyUUID).Return(expectedSocietyInfo, nil)
+		mockDBRepo.EXPECT().CountSubscribe(societyUUID).Return(expectedCountSubscribe, nil)
+		mockDBRepo.EXPECT().GetTags(societyUUID).Return(expectedTags, nil)
+
 		mockLogger.EXPECT().AddFuncName("GetSocietyInfo")
 
 		result, err := s.GetSocietyInfo(ctx, mockInput)
 
 		assert.NoError(t, err)
 		assert.Equal(t, expectedSocietyInfo.Name, result.Name)
-		assert.Equal(t, expectedSocietyInfo.Description.String, result.Description) // исправлено
+		assert.Equal(t, expectedSocietyInfo.Description.String, result.Description)
 		assert.Equal(t, expectedSocietyInfo.OwnerUUID, result.OwnerUUID)
 		assert.Equal(t, expectedSocietyInfo.PhotoURL, result.PhotoURL)
 		assert.Equal(t, expectedSocietyInfo.FormatID, result.FormatID)
 		assert.Equal(t, expectedSocietyInfo.PostPermission, result.PostPermission)
 		assert.Equal(t, expectedSocietyInfo.IsSearch, result.IsSearch)
-		assert.Equal(t, expectedSocietyInfo.CountSubscribe, result.CountSubscribe)
-		assert.Len(t, result.TagsID, len(expectedSocietyInfo.TagsID))
+
+		assert.Equal(t, expectedCountSubscribe, result.CountSubscribe)
+
+		assert.Len(t, result.TagsID, len(expectedTags))
+		for i, tag := range result.TagsID {
+			assert.Equal(t, expectedTags[i], tag.TagID)
+		}
 	})
 
 	t.Run("should_return_error_if_societyUUID_is_empty", func(t *testing.T) {
@@ -236,12 +249,16 @@ func TestServer_UpdateSociety(t *testing.T) {
 		}
 
 		mockLogger.EXPECT().AddFuncName("UpdateSociety")
-		mockDBRepo.EXPECT().UpdateSociety(expectedUpdateSociety, ownerUUID).Return(nil) // Исправлен порядок аргументов
+
+		mockDBRepo.EXPECT().IsOwnerAdminModerator(ownerUUID, societyUUID).Return(1, nil) // 1 - Owner
+
+		mockDBRepo.EXPECT().UpdateSociety(expectedUpdateSociety).Return(nil)
 
 		_, err := s.UpdateSociety(ctx, expectedUpdateSociety)
 
 		assert.NoError(t, err)
 	})
+
 	t.Run("should_return_error_if_uuid_not_found_in_context", func(t *testing.T) {
 		ctx := context.WithValue(context.Background(), config.KeyLogger, mockLogger)
 
@@ -345,9 +362,11 @@ func TestServer_UpdateSociety(t *testing.T) {
 		}
 
 		expectedError := errors.New("database error")
+
 		mockLogger.EXPECT().AddFuncName("UpdateSociety")
+		mockDBRepo.EXPECT().IsOwnerAdminModerator(ownerUUID, societyUUID).Return(1, nil)
+		mockDBRepo.EXPECT().UpdateSociety(expectedUpdateSociety).Return(expectedError)
 		mockLogger.EXPECT().Error("failed to UpdateSociety from BD")
-		mockDBRepo.EXPECT().UpdateSociety(expectedUpdateSociety, ownerUUID).Return(expectedError)
 
 		_, err := s.UpdateSociety(ctx, expectedUpdateSociety)
 

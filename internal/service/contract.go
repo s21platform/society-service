@@ -9,5 +9,8 @@ import (
 type DbRepo interface {
 	CreateSociety(socData *model.SocietyData) (string, error)
 	GetSocietyInfo(societyUUID string) (*model.SocietyInfo, error)
-	UpdateSociety(societyData *society.UpdateSocietyIn, ownerUUID string) error
+	UpdateSociety(societyData *society.UpdateSocietyIn) error
+	IsOwnerAdminModerator(peerUUID, societyUUID string) (int, error)
+	GetTags(societyUUID string) ([]int64, error)
+	CountSubscribe(societyUUID string) (int64, error)
 }

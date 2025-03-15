@@ -21,3 +21,7 @@ type SocietyInfo struct {
 	CountSubscribe int64          `db:"-"`
 	TagsID         []int64        `db:"-"`
 }
+
+type Role []struct {
+	Role int `db:"role"`
+}
