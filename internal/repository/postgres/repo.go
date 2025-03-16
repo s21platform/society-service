@@ -52,7 +52,7 @@ func (r *Repository) Close() {
 	r.connection.Close()
 }
 
-func (r *Repository) CreateSociety(socData *model.SocietyData) (string, error) {
+func (r *Repository) CreateSociety(ctx context.Context, socData *model.SocietyData) (string, error) {
 	tx, err := r.connection.Beginx()
 	if err != nil {
 		return "", fmt.Errorf("failed to start transaction: %w", err)
@@ -71,7 +71,7 @@ func (r *Repository) CreateSociety(socData *model.SocietyData) (string, error) {
 		return "", fmt.Errorf("failed to build society insert query: %w", err)
 	}
 
-	err = tx.Get(&societyUUID, query, args...)
+	err = tx.GetContext(ctx, &societyUUID, query, args...)
 	if err != nil {
 		_ = tx.Rollback()
 		return "", fmt.Errorf("failed to insert society: %w", err)
@@ -87,7 +87,7 @@ func (r *Repository) CreateSociety(socData *model.SocietyData) (string, error) {
 		return "", fmt.Errorf("failed to build society_members insert query: %w", err)
 	}
 
-	_, err = tx.Exec(query, args...)
+	_, err = tx.ExecContext(ctx, query, args...)
 	if err != nil {
 		_ = tx.Rollback()
 		return "", fmt.Errorf("failed to insert society member: %w", err)
@@ -101,7 +101,7 @@ func (r *Repository) CreateSociety(socData *model.SocietyData) (string, error) {
 	return societyUUID, nil
 }
 
-func (r *Repository) GetSocietyInfo(societyUUID string) (*model.SocietyInfo, error) {
+func (r *Repository) GetSocietyInfo(ctx context.Context, societyUUID string) (*model.SocietyInfo, error) {
 	var societyInfo model.SocietyInfo
 
 	query := sq.Select(
@@ -122,14 +122,14 @@ func (r *Repository) GetSocietyInfo(societyUUID string) (*model.SocietyInfo, err
 		return nil, fmt.Errorf("failed to build SQL query: %w", err)
 	}
 
-	err = r.connection.GetContext(context.Background(), &societyInfo, sqlString, args...)
+	err = r.connection.GetContext(ctx, &societyInfo, sqlString, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get society info: %w", err)
 	}
 	return &societyInfo, nil
 }
 
-func (r *Repository) GetTags(societyUUID string) ([]int64, error) {
+func (r *Repository) GetTags(ctx context.Context, societyUUID string) ([]int64, error) {
 	query := sq.Select("tag_id").From("society_has_tags").Where(sq.Eq{"society_id": societyUUID})
 	sqlString, args, err := query.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
@@ -137,14 +137,14 @@ func (r *Repository) GetTags(societyUUID string) ([]int64, error) {
 	}
 
 	var tags []int64
-	err = r.connection.Select(&tags, sqlString, args...)
+	err = r.connection.SelectContext(ctx, &tags, sqlString, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query GetTags: %w", err)
 	}
 	return tags, nil
 }
 
-func (r *Repository) CountSubscribe(societyUUID string) (int64, error) {
+func (r *Repository) CountSubscribe(ctx context.Context, societyUUID string) (int64, error) {
 	query := sq.Select("count(*)").From("society_members").Where(sq.Eq{"society_id": societyUUID})
 	sqlString, args, err := query.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
@@ -152,7 +152,7 @@ func (r *Repository) CountSubscribe(societyUUID string) (int64, error) {
 	}
 
 	var count int64
-	err = r.connection.Get(&count, sqlString, args...)
+	err = r.connection.GetContext(ctx, &count, sqlString, args...)
 	if err != nil {
 		return 0, fmt.Errorf("failed to execute query CountSubscribe: %w", err)
 	}
@@ -160,7 +160,7 @@ func (r *Repository) CountSubscribe(societyUUID string) (int64, error) {
 	return count, nil
 }
 
-func (r *Repository) UpdateSociety(societyData *society.UpdateSocietyIn) error {
+func (r *Repository) UpdateSociety(ctx context.Context, societyData *society.UpdateSocietyIn) error {
 	query := sq.Update("society").
 		Set("name", societyData.Name).
 		Set("description", societyData.Description).
@@ -176,7 +176,7 @@ func (r *Repository) UpdateSociety(societyData *society.UpdateSocietyIn) error {
 		return fmt.Errorf("failed to build SQL query: %w", err)
 	}
 
-	_, err = r.connection.Exec(sql, args...)
+	_, err = r.connection.ExecContext(ctx, sql, args...)
 	if err != nil {
 		return fmt.Errorf("failed to update society: %w", err)
 	}
@@ -184,7 +184,7 @@ func (r *Repository) UpdateSociety(societyData *society.UpdateSocietyIn) error {
 	return nil
 }
 
-func (r *Repository) IsOwnerAdminModerator(peerUUID, societyUUID string) (int, error) {
+func (r *Repository) IsOwnerAdminModerator(ctx context.Context, peerUUID, societyUUID string) (int, error) {
 	query := sq.Select("role").
 		From("society_members").
 		Where(sq.Eq{"society_id": societyUUID, "user_uuid": peerUUID}).
@@ -197,14 +197,10 @@ func (r *Repository) IsOwnerAdminModerator(peerUUID, societyUUID string) (int, e
 
 	var result model.Role
 
-	err = sqlx.Select(r.connection, &result, sql, args...)
+	err = sqlx.GetContext(ctx, r.connection, &result, sql, args...)
 	if err != nil {
 		return 0, fmt.Errorf("failed to execute query isOwnerAdminModerator: %w", err)
 	}
 
-	if len(result) == 0 {
-		return 0, fmt.Errorf("user not found or invalid role")
-	}
-
-	return result[0].Role, nil
+	return result.Role, nil
 }

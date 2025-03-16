@@ -22,6 +22,6 @@ type SocietyInfo struct {
 	TagsID         []int64        `db:"-"`
 }
 
-type Role []struct {
+type Role struct {
 	Role int `db:"role"`
 }

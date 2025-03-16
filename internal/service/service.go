@@ -45,7 +45,7 @@ func (s *Server) CreateSociety(ctx context.Context, in *society.SetSocietyIn) (*
 		IsSearch:       in.IsSearch,
 		OwnerUUID:      uuid,
 	}
-	societyUUID, err := s.dbR.CreateSociety(&SocietyData)
+	societyUUID, err := s.dbR.CreateSociety(ctx, &SocietyData)
 	if err != nil {
 		logger.Error("failed to CreateSociety from BD")
 		return nil, err
@@ -62,7 +62,7 @@ func (s *Server) GetSocietyInfo(ctx context.Context, in *society.GetSocietyInfoI
 		return nil, status.Error(codes.InvalidArgument, "societyUUID not provided")
 	}
 
-	societyInfo, err := s.dbR.GetSocietyInfo(in.SocietyUUID)
+	societyInfo, err := s.dbR.GetSocietyInfo(ctx, in.SocietyUUID)
 
 	if err != nil {
 		logger.Error("failed to GetSocietyInfo from BD")
@@ -73,13 +73,13 @@ func (s *Server) GetSocietyInfo(ctx context.Context, in *society.GetSocietyInfoI
 		societyInfo.Description.String = ""
 	}
 
-	count, err := s.dbR.CountSubscribe(in.SocietyUUID)
+	count, err := s.dbR.CountSubscribe(ctx, in.SocietyUUID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get count of subscribers: %w", err)
 	}
 	societyInfo.CountSubscribe = count
 
-	getTag, err := s.dbR.GetTags(in.SocietyUUID)
+	getTag, err := s.dbR.GetTags(ctx, in.SocietyUUID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tags: %w", err)
 	}
@@ -129,7 +129,7 @@ func (s *Server) UpdateSociety(ctx context.Context, in *society.UpdateSocietyIn)
 		return nil, status.Error(codes.InvalidArgument, "failed to name not provided")
 	}
 
-	isAllowed, err := s.dbR.IsOwnerAdminModerator(uuid, in.SocietyUUID)
+	isAllowed, err := s.dbR.IsOwnerAdminModerator(ctx, uuid, in.SocietyUUID)
 	if err != nil {
 		logger.Error("failed to IsOwnerAdminModerator from BD")
 		return nil, status.Error(codes.InvalidArgument, "failed to IsOwnerAdminModerator from BD")
@@ -145,7 +145,7 @@ func (s *Server) UpdateSociety(ctx context.Context, in *society.UpdateSocietyIn)
 		return nil, status.Error(codes.InvalidArgument, "failed to peer is not Owner, Admin or Moderator")
 	}
 
-	err = s.dbR.UpdateSociety(in)
+	err = s.dbR.UpdateSociety(ctx, in)
 
 	if err != nil {
 		logger.Error("failed to UpdateSociety from BD")

@@ -47,6 +47,7 @@ func TestServer_CreateSociety(t *testing.T) {
 	t.Run("should_create_society_successfully", func(t *testing.T) {
 		userUUID := uuid.Generate().String()
 		ctx := context.WithValue(context.Background(), config.KeyUUID, userUUID)
+		ctx = context.WithValue(ctx, config.KeyLogger, mockLogger)
 
 		mockInput := &society.SetSocietyIn{
 			Name:             "Test Society",
@@ -55,9 +56,8 @@ func TestServer_CreateSociety(t *testing.T) {
 			IsSearch:         true,
 		}
 		expectedSocietyUUID := uuid.Generate().String()
-		mockDBRepo.EXPECT().CreateSociety(gomock.Any()).Return(expectedSocietyUUID, nil)
+		mockDBRepo.EXPECT().CreateSociety(ctx, gomock.Any()).Return(expectedSocietyUUID, nil)
 		mockLogger.EXPECT().AddFuncName("CreateSociety")
-		ctx = context.WithValue(ctx, config.KeyLogger, mockLogger)
 
 		result, err := s.CreateSociety(ctx, mockInput)
 		expectedOutput := &society.SetSocietyOut{SocietyUUID: expectedSocietyUUID}
@@ -84,6 +84,8 @@ func TestServer_CreateSociety(t *testing.T) {
 	t.Run("should_return_error_if_dbR_CreateSociety_fails", func(t *testing.T) {
 		userUUID := uuid.Generate().String()
 		ctx := context.WithValue(context.Background(), config.KeyUUID, userUUID)
+		ctx = context.WithValue(ctx, config.KeyLogger, mockLogger)
+
 		mockInput := &society.SetSocietyIn{
 			Name:             "Test Society",
 			FormatID:         1,
@@ -91,10 +93,9 @@ func TestServer_CreateSociety(t *testing.T) {
 			IsSearch:         true,
 		}
 		expectedError := errors.New("database error")
-		mockDBRepo.EXPECT().CreateSociety(gomock.Any()).Return("", expectedError)
+		mockDBRepo.EXPECT().CreateSociety(ctx, gomock.Any()).Return("", expectedError)
 		mockLogger.EXPECT().AddFuncName("CreateSociety")
 		mockLogger.EXPECT().Error("failed to CreateSociety from BD")
-		ctx = context.WithValue(ctx, config.KeyLogger, mockLogger)
 
 		result, err := s.CreateSociety(ctx, mockInput)
 		assert.Error(t, err)
@@ -161,9 +162,9 @@ func TestServer_GetSocietyInfo(t *testing.T) {
 
 		expectedTags := []int64{1, 2}
 
-		mockDBRepo.EXPECT().GetSocietyInfo(societyUUID).Return(expectedSocietyInfo, nil)
-		mockDBRepo.EXPECT().CountSubscribe(societyUUID).Return(expectedCountSubscribe, nil)
-		mockDBRepo.EXPECT().GetTags(societyUUID).Return(expectedTags, nil)
+		mockDBRepo.EXPECT().GetSocietyInfo(ctx, societyUUID).Return(expectedSocietyInfo, nil)
+		mockDBRepo.EXPECT().CountSubscribe(ctx, societyUUID).Return(expectedCountSubscribe, nil)
+		mockDBRepo.EXPECT().GetTags(ctx, societyUUID).Return(expectedTags, nil)
 
 		mockLogger.EXPECT().AddFuncName("GetSocietyInfo")
 
@@ -209,7 +210,7 @@ func TestServer_GetSocietyInfo(t *testing.T) {
 		mockInput := &society.GetSocietyInfoIn{SocietyUUID: societyUUID}
 		expectedError := errors.New("database error")
 
-		mockDBRepo.EXPECT().GetSocietyInfo(societyUUID).Return(nil, expectedError)
+		mockDBRepo.EXPECT().GetSocietyInfo(ctx, societyUUID).Return(nil, expectedError)
 		mockLogger.EXPECT().AddFuncName("GetSocietyInfo")
 		mockLogger.EXPECT().Error("failed to GetSocietyInfo from BD")
 
@@ -249,10 +250,8 @@ func TestServer_UpdateSociety(t *testing.T) {
 		}
 
 		mockLogger.EXPECT().AddFuncName("UpdateSociety")
-
-		mockDBRepo.EXPECT().IsOwnerAdminModerator(ownerUUID, societyUUID).Return(1, nil) // 1 - Owner
-
-		mockDBRepo.EXPECT().UpdateSociety(expectedUpdateSociety).Return(nil)
+		mockDBRepo.EXPECT().IsOwnerAdminModerator(ctx, ownerUUID, societyUUID).Return(1, nil) // 1 - Owner
+		mockDBRepo.EXPECT().UpdateSociety(ctx, expectedUpdateSociety).Return(nil)
 
 		_, err := s.UpdateSociety(ctx, expectedUpdateSociety)
 
@@ -364,8 +363,8 @@ func TestServer_UpdateSociety(t *testing.T) {
 		expectedError := errors.New("database error")
 
 		mockLogger.EXPECT().AddFuncName("UpdateSociety")
-		mockDBRepo.EXPECT().IsOwnerAdminModerator(ownerUUID, societyUUID).Return(1, nil)
-		mockDBRepo.EXPECT().UpdateSociety(expectedUpdateSociety).Return(expectedError)
+		mockDBRepo.EXPECT().IsOwnerAdminModerator(ctx, ownerUUID, societyUUID).Return(1, nil)
+		mockDBRepo.EXPECT().UpdateSociety(ctx, expectedUpdateSociety).Return(expectedError)
 		mockLogger.EXPECT().Error("failed to UpdateSociety from BD")
 
 		_, err := s.UpdateSociety(ctx, expectedUpdateSociety)
