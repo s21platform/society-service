@@ -20,7 +20,5 @@ spec:
   providesApis:
     - society-api  # API, который предоставляет сервис
   consumesApis:
-    - friends-api
   dependsOn:
-    - component:friends
 #  system: authentication-system  # Можно указать систему, если есть

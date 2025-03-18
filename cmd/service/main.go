@@ -9,6 +9,7 @@ import (
 
 	"github.com/s21platform/society-service/internal/infra"
 
+	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
 
 	society "github.com/s21platform/society-proto/society-proto"
