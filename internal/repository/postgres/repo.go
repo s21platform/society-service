@@ -204,3 +204,65 @@ func (r *Repository) IsOwnerAdminModerator(ctx context.Context, peerUUID, societ
 
 	return result.Role, nil
 }
+
+func (r *Repository) GetSocietyWithOffset(data *model.WithOffsetData) (*[]model.SocietyWithOffsetData, error) {
+	var out []model.SocietyWithOffsetData
+
+	baseQuery, args, err := sq.Select(
+		"name",
+		"photo_url",
+		"s.id AS society_id",
+		"CASE WHEN ss.user_uuid = ? THEN true ELSE false END AS is_member",
+	).
+		From("societies s").
+		LeftJoin("societies_subscribers ss ON s.id = ss.society_id AND ss.user_uuid = ?", data.Uuid).
+		Where(sq.Or{
+			sq.Expr("? = ''", data.Name),
+			sq.Expr("name ILIKE ?", "%"+data.Name+"%"),
+		}).
+		Offset(uint64(data.Offset)).
+		Limit(uint64(data.Limit)).PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.connection.Select(&out, baseQuery, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	return &out, err
+}
+
+func (r *Repository) GetCountSocietyWithOffset(socData *model.WithOffsetData) (int64, error) {
+	var count int64
+
+	baseQuery := sq.Select(
+		"name",
+		"photo_url",
+		"s.id AS society_id",
+		"CASE WHEN ss.user_uuid = ? THEN true ELSE false END AS is_member",
+	).
+		From("societies s").
+		LeftJoin("societies_subscribers ss ON s.id = ss.society_id AND ss.user_uuid = ?", socData.Uuid).
+		Where(sq.Or{
+			sq.Expr("? = ''", socData.Name),
+			sq.Expr("name ILIKE ?", "%"+socData.Name+"%"),
+		}).
+		PlaceholderFormat(sq.Dollar)
+
+	countQuery, args, err := sq.Select("COUNT(*)").
+		FromSelect(baseQuery, "test").
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return 0, err
+	}
+
+	err = r.connection.Get(&count, countQuery, args...)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}

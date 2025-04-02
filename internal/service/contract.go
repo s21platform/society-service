@@ -15,4 +15,6 @@ type DbRepo interface {
 	IsOwnerAdminModerator(ctx context.Context, peerUUID, societyUUID string) (int, error)
 	GetTags(ctx context.Context, societyUUID string) ([]int64, error)
 	CountSubscribe(ctx context.Context, societyUUID string) (int64, error)
+	GetSocietyWithOffset(data *model.WithOffsetData) (*[]model.SocietyWithOffsetData, error)
+	GetCountSocietyWithOffset(data *model.WithOffsetData) (int64, error)
 }
