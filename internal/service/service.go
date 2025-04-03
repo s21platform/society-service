@@ -57,6 +57,12 @@ func (s *Server) GetSocietyInfo(ctx context.Context, in *society.GetSocietyInfoI
 	logger := logger_lib.FromContext(ctx, config.KeyLogger)
 	logger.AddFuncName("GetSocietyInfo")
 
+	uuid, ok := ctx.Value(config.KeyUUID).(string)
+	if !ok {
+		logger.Error("failed to not found UUID in context")
+		return nil, status.Error(codes.Internal, "uuid not found in context")
+	}
+
 	if in.SocietyUUID == "" {
 		logger.Error("failed to SocietyUUID is empty")
 		return nil, status.Error(codes.InvalidArgument, "societyUUID not provided")
@@ -95,6 +101,17 @@ func (s *Server) GetSocietyInfo(ctx context.Context, in *society.GetSocietyInfoI
 		description = societyInfo.Description.String
 	}
 
+	canEditSocietyInt, err := s.dbR.IsOwnerAdminModerator(ctx, uuid, in.SocietyUUID)
+	canEditSociety := false
+	if err != nil {
+		logger.Error("failed to IsOwnerAdminModerator from BD")
+		return nil, err
+	}
+	if canEditSocietyInt <= 3 {
+		canEditSociety = true
+	}
+	societyInfo.CanEditSociety = canEditSociety
+
 	out := &society.GetSocietyInfoOut{
 		Name:           societyInfo.Name,
 		Description:    description,
@@ -105,6 +122,7 @@ func (s *Server) GetSocietyInfo(ctx context.Context, in *society.GetSocietyInfoI
 		IsSearch:       societyInfo.IsSearch,
 		CountSubscribe: societyInfo.CountSubscribe,
 		TagsID:         tags,
+		CanEditSociety: canEditSociety,
 	}
 	return out, nil
 }

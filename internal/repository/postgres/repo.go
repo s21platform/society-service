@@ -164,7 +164,6 @@ func (r *Repository) UpdateSociety(ctx context.Context, societyData *society.Upd
 	query := sq.Update("society").
 		Set("name", societyData.Name).
 		Set("description", societyData.Description).
-		Set("photo_url", societyData.PhotoURL).
 		Set("format_id", societyData.FormatID).
 		Set("post_permission_id", societyData.PostPermission).
 		Set("is_search", societyData.IsSearch).
