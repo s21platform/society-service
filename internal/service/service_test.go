@@ -140,7 +140,9 @@ func TestServer_GetSocietyInfo(t *testing.T) {
 	s := &Server{dbR: mockDBRepo}
 
 	t.Run("should_get_society_info_successfully", func(t *testing.T) {
-		ctx := context.WithValue(context.Background(), config.KeyLogger, mockLogger)
+		userUUID := uuid.Generate().String()
+		ctx := context.WithValue(context.Background(), config.KeyUUID, userUUID)
+		ctx = context.WithValue(ctx, config.KeyLogger, mockLogger)
 
 		societyUUID := uuid.Generate().String()
 
@@ -154,16 +156,18 @@ func TestServer_GetSocietyInfo(t *testing.T) {
 			FormatID:       1,
 			PostPermission: 2,
 			IsSearch:       true,
-			CountSubscribe: 100, // Это значение будет перезаписано в ручке
+			CountSubscribe: 100,
 			TagsID:         []int64{1, 2},
+			CanEditSociety: true,
 		}
 
 		expectedCountSubscribe := int64(150)
-
 		expectedTags := []int64{1, 2}
+		expectedCanEdit := 1
 
 		mockDBRepo.EXPECT().GetSocietyInfo(ctx, societyUUID).Return(expectedSocietyInfo, nil)
 		mockDBRepo.EXPECT().CountSubscribe(ctx, societyUUID).Return(expectedCountSubscribe, nil)
+		mockDBRepo.EXPECT().IsOwnerAdminModerator(ctx, userUUID, societyUUID).Return(expectedCanEdit, nil) // <-- Добавлено
 		mockDBRepo.EXPECT().GetTags(ctx, societyUUID).Return(expectedTags, nil)
 
 		mockLogger.EXPECT().AddFuncName("GetSocietyInfo")
@@ -185,10 +189,14 @@ func TestServer_GetSocietyInfo(t *testing.T) {
 		for i, tag := range result.TagsID {
 			assert.Equal(t, expectedTags[i], tag.TagID)
 		}
+
+		assert.True(t, result.CanEditSociety) // или false, если expectedCanEdit > 3
 	})
 
 	t.Run("should_return_error_if_societyUUID_is_empty", func(t *testing.T) {
-		ctx := context.WithValue(context.Background(), config.KeyLogger, mockLogger)
+		userUUID := uuid.Generate().String()
+		ctx := context.WithValue(context.Background(), config.KeyUUID, userUUID)
+		ctx = context.WithValue(ctx, config.KeyLogger, mockLogger)
 		mockInput := &society.GetSocietyInfoIn{SocietyUUID: ""}
 
 		mockLogger.EXPECT().AddFuncName("GetSocietyInfo")
@@ -205,7 +213,9 @@ func TestServer_GetSocietyInfo(t *testing.T) {
 	})
 
 	t.Run("should_return_error_if_dbR_GetSocietyInfo_fails", func(t *testing.T) {
-		ctx := context.WithValue(context.Background(), config.KeyLogger, mockLogger)
+		userUUID := uuid.Generate().String()
+		ctx := context.WithValue(context.Background(), config.KeyUUID, userUUID)
+		ctx = context.WithValue(ctx, config.KeyLogger, mockLogger)
 		societyUUID := uuid.Generate().String()
 		mockInput := &society.GetSocietyInfoIn{SocietyUUID: societyUUID}
 		expectedError := errors.New("database error")
