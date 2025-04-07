@@ -198,6 +198,9 @@ func (r *Repository) IsOwnerAdminModerator(ctx context.Context, peerUUID, societ
 
 	err = sqlx.GetContext(ctx, r.connection, &result, sql, args...)
 	if err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			return 0, nil
+		}
 		return 0, fmt.Errorf("failed to execute query isOwnerAdminModerator: %w", err)
 	}
 
