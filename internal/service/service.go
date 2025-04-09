@@ -107,7 +107,7 @@ func (s *Server) GetSocietyInfo(ctx context.Context, in *society.GetSocietyInfoI
 		logger.Error("failed to IsOwnerAdminModerator from BD")
 		return nil, err
 	}
-	if canEditSocietyInt <= 3 {
+	if canEditSocietyInt <= 3 && canEditSocietyInt >= 1 {
 		canEditSociety = true
 	}
 	societyInfo.CanEditSociety = canEditSociety
