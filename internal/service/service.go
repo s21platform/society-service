@@ -173,99 +173,63 @@ func (s *Server) UpdateSociety(ctx context.Context, in *society.UpdateSocietyIn)
 	return &society.EmptySociety{}, nil
 }
 
-//func (s *Server) GetSocietyWithOffset(ctx context.Context, in *society.GetSocietyWithOffsetIn) (*society.GetSocietyWithOffsetOut, error) {
-//	uuid, ok := ctx.Value(config.KeyUUID).(string)
-//	if !ok {
-//		return nil, fmt.Errorf("uuid not found in context")
-//	}
-//
-//	withOffsetData := model.WithOffsetData{
-//		Limit:  in.Limit,
-//		Offset: in.Offset,
-//		Name:   in.Name,
-//		Uuid:   uuid,
-//	}
-//	data, err := s.dbR.GetSocietyWithOffset(&withOffsetData)
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to get society with offset: %v", err)
-//	}
-//	count, err := s.dbR.GetCountSocietyWithOffset(&withOffsetData)
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to get count society with offset: %v", err)
-//	}
-//	out := society.GetSocietyWithOffsetOut{
-//		Society: make([]*society.Society, len(*data)),
-//		Total:   count,
-//	}
-//	for j, i := range *data {
-//		level := &society.Society{
-//			Name:       i.Name,
-//			AvatarLink: i.AvatarLink,
-//			SocietyId:  i.SocietyId,
-//			IsMember:   i.IsMember,
-//		}
-//		out.Society[j] = level
-//	}
-//
-//	return &out, err
-//}
-//
-//func (s *Server) SubscribeToSociety(ctx context.Context, in *society.SubscribeToSocietyIn) (*society.SubscribeToSocietyOut, error) {
-//	uuid, ok := ctx.Value(config.KeyUUID).(string)
-//	if !ok {
-//		return nil, fmt.Errorf("uuid not found in context")
-//	}
-//
-//	data, err := s.dbR.SubscribeToSociety(in.SocietyId, uuid)
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to subcribe to society %v", err)
-//	}
-//
-//	out := society.SubscribeToSocietyOut{
-//		Success: data,
-//	}
-//	return &out, err
-//}
-//
-//func (s *Server) UnsubscribeFromSociety(ctx context.Context, in *society.UnsubscribeFromSocietyIn) (*society.UnsubscribeFromSocietyOut, error) {
-//	uuid, ok := ctx.Value(config.KeyUUID).(string)
-//	if !ok {
-//		return nil, fmt.Errorf("uuid not found in context")
-//	}
-//
-//	data, err := s.dbR.UnsubscribeFromSociety(in.SocietyId, uuid)
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to unsubcribe to society %v", err)
-//	}
-//
-//	out := society.UnsubscribeFromSocietyOut{
-//		Success: data,
-//	}
-//	return &out, err
-//}
-//
-//func (s *Server) GetSocietiesForUser(ctx context.Context, in *society.GetSocietiesForUserIn) (*society.GetSocietiesForUserOut, error) {
-//	uuid, ok := ctx.Value(config.KeyUUID).(string)
-//	if !ok {
-//		return nil, fmt.Errorf("uuid not found in context")
-//	}
-//	data, err := s.dbR.GetSocietiesForUser(uuid, in.UserUuid)
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to get society for user: %v", err)
-//	}
-//
-//	out := society.GetSocietiesForUserOut{
-//		Society: make([]*society.Society, len(*data)),
-//	}
-//	for j, i := range *data {
-//		level := &society.Society{
-//			Name:       i.Name,
-//			AvatarLink: i.AvatarLink,
-//			SocietyId:  i.SocietyId,
-//			IsMember:   i.IsMember,
-//			IsPrivate:  i.IsPrivate,
-//		}
-//		out.Society[j] = level
-//	}
-//	return &out, err
-//}
+func (s *Server) GetSocietyWithOffset(ctx context.Context, in *society.GetSocietyWithOffsetIn) (*society.GetSocietyWithOffsetOut, error) {
+	logger := logger_lib.FromContext(ctx, config.KeyLogger)
+	logger.AddFuncName("GetSocietyWithOffset")
+
+	uuid, ok := ctx.Value(config.KeyUUID).(string)
+	if !ok {
+		return nil, status.Error(codes.Internal, "uuid not found in context")
+	}
+
+	if in.Limit < 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid limit: limit < 0")
+	}
+
+	if in.Offset < 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid offset: offset < 0")
+	}
+	withOffsetData := model.WithOffsetData{
+		Limit:  in.Limit,
+		Offset: in.Offset,
+		Name:   in.Name,
+		Uuid:   uuid,
+	}
+
+	data, err := s.dbR.GetSocietyWithOffset(ctx, &withOffsetData)
+	if err != nil {
+		logger.Error("failed to GetSocietyWithOffset from BD")
+	}
+	if len(*data) < 1 {
+		return nil, status.Error(codes.NotFound, "not found")
+	}
+
+	socityUuid := make([]string, len(*data))
+	for i, j := range *data {
+		socityUuid[i] = j.SocietyUUID
+	}
+	memberOfSociety, err := s.dbR.GetMemberOfSocieties(ctx, socityUuid)
+	if err != nil {
+		logger.Error("failed to GetMemberOfSocieties from BD")
+	}
+
+	for _, j := range *data {
+		j.IsMember = memberOfSociety[j.SocietyUUID]
+	}
+	out := society.GetSocietyWithOffsetOut{
+		Societies: make([]*society.Society, len(*data)),
+		Total:     int64(len(*data)),
+	}
+	for j, i := range *data {
+		level := &society.Society{
+			SocietyUUID: i.SocietyUUID,
+			Name:        i.Name,
+			PhotoURL:    i.PhotoURL,
+			IsMember:    i.IsMember,
+			FormatId:    i.FormatId,
+		}
+		out.Societies[j] = level
+	}
+
+	return &out, nil
+}

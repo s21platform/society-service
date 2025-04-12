@@ -8,6 +8,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/lib/pq"
+
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	society "github.com/s21platform/society-proto/society-proto"
@@ -206,4 +208,64 @@ func (r *Repository) IsOwnerAdminModerator(ctx context.Context, peerUUID, societ
 	}
 
 	return result.Role, nil
+}
+
+func (r *Repository) GetSocietyWithOffset(ctx context.Context, data *model.WithOffsetData) (*[]model.SocietyWithOffsetData, error) {
+	var out []model.SocietyWithOffsetData
+
+	baseQuery, args, err := sq.Select(
+		"id",
+		"name",
+		"photo_url",
+		"format_id as isPrivate",
+	).
+		From("societies s").
+		Where(sq.Or{
+			sq.Expr("? = ''", data.Name),
+			sq.Expr("name ILIKE ?", "%"+data.Name+"%"),
+		}).
+		Offset(uint64(data.Offset)).
+		Limit(uint64(data.Limit)).PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.connection.SelectContext(ctx, &out, baseQuery, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	return &out, err
+}
+
+func (r *Repository) GetMemberOfSocieties(ctx context.Context, society []string) (map[string]bool, error) {
+	result := make(map[string]bool)
+	uuid := ctx.Value(config.KeyUUID).(string)
+
+	baseQuery, args, err := sq.Select(
+		"society_id").
+		From("society_members").
+		Where(sq.Eq{"user_uuid": uuid}).
+		Where("society_id = ANY(?)", pq.Array(society)).
+		ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := r.connection.QueryContext(ctx, baseQuery, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var uuid string
+		err = rows.Scan(&uuid)
+		if err != nil {
+			return nil, err
+		}
+		result[uuid] = true
+	}
+	return result, nil
 }
