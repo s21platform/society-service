@@ -2,10 +2,13 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
-	"github.com/lib/pq"
 	"log"
 	"time"
+
+	"github.com/lib/pq"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
@@ -165,7 +168,6 @@ func (r *Repository) UpdateSociety(ctx context.Context, societyData *society.Upd
 	query := sq.Update("society").
 		Set("name", societyData.Name).
 		Set("description", societyData.Description).
-		Set("photo_url", societyData.PhotoURL).
 		Set("format_id", societyData.FormatID).
 		Set("post_permission_id", societyData.PostPermission).
 		Set("is_search", societyData.IsSearch).
@@ -186,20 +188,22 @@ func (r *Repository) UpdateSociety(ctx context.Context, societyData *society.Upd
 }
 
 func (r *Repository) IsOwnerAdminModerator(ctx context.Context, peerUUID, societyUUID string) (int, error) {
-	query := sq.Select("role").
+	query, args, err := sq.Select("role").
 		From("society_members").
 		Where(sq.Eq{"society_id": societyUUID, "user_uuid": peerUUID}).
-		PlaceholderFormat(sq.Dollar)
-
-	sql, args, err := query.ToSql()
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
 	if err != nil {
 		return 0, fmt.Errorf("failed to build SQL query: %w", err)
 	}
 
 	var result model.Role
 
-	err = sqlx.GetContext(ctx, r.connection, &result, sql, args...)
+	err = sqlx.GetContext(ctx, r.connection, &result, query, args...)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, nil
+		}
 		return 0, fmt.Errorf("failed to execute query isOwnerAdminModerator: %w", err)
 	}
 

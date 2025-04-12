@@ -20,6 +20,7 @@ type SocietyInfo struct {
 	IsSearch       bool           `db:"is_search"`
 	CountSubscribe int64          `db:"-"`
 	TagsID         []int64        `db:"-"`
+	CanEditSociety bool           `db:"-"`
 }
 
 type SocietyWithOffset struct {
