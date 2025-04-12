@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"github.com/lib/pq"
 	"log"
 	"time"
 
@@ -205,17 +206,16 @@ func (r *Repository) IsOwnerAdminModerator(ctx context.Context, peerUUID, societ
 	return result.Role, nil
 }
 
-func (r *Repository) GetSocietyWithOffset(data *model.WithOffsetData) (*[]model.SocietyWithOffsetData, error) {
+func (r *Repository) GetSocietyWithOffset(ctx context.Context, data *model.WithOffsetData) (*[]model.SocietyWithOffsetData, error) {
 	var out []model.SocietyWithOffsetData
 
 	baseQuery, args, err := sq.Select(
+		"id",
 		"name",
 		"photo_url",
-		"s.id AS society_id",
-		"CASE WHEN ss.user_uuid = ? THEN true ELSE false END AS is_member",
+		"format_id as isPrivate",
 	).
 		From("societies s").
-		LeftJoin("societies_subscribers ss ON s.id = ss.society_id AND ss.user_uuid = ?", data.Uuid).
 		Where(sq.Or{
 			sq.Expr("? = ''", data.Name),
 			sq.Expr("name ILIKE ?", "%"+data.Name+"%"),
@@ -227,7 +227,7 @@ func (r *Repository) GetSocietyWithOffset(data *model.WithOffsetData) (*[]model.
 		return nil, err
 	}
 
-	err = r.connection.Select(&out, baseQuery, args...)
+	err = r.connection.SelectContext(ctx, &out, baseQuery, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -235,34 +235,33 @@ func (r *Repository) GetSocietyWithOffset(data *model.WithOffsetData) (*[]model.
 	return &out, err
 }
 
-func (r *Repository) GetCountSocietyWithOffset(socData *model.WithOffsetData) (int64, error) {
-	var count int64
+func (r *Repository) GetMemberOfSocieties(ctx context.Context, society []string) (map[string]bool, error) {
+	result := make(map[string]bool)
+	uuid := ctx.Value(config.KeyUUID).(string)
 
-	baseQuery := sq.Select(
-		"name",
-		"photo_url",
-		"s.id AS society_id",
-		"CASE WHEN ss.user_uuid = ? THEN true ELSE false END AS is_member",
-	).
-		From("societies s").
-		LeftJoin("societies_subscribers ss ON s.id = ss.society_id AND ss.user_uuid = ?", socData.Uuid).
-		Where(sq.Or{
-			sq.Expr("? = ''", socData.Name),
-			sq.Expr("name ILIKE ?", "%"+socData.Name+"%"),
-		}).
-		PlaceholderFormat(sq.Dollar)
-
-	countQuery, args, err := sq.Select("COUNT(*)").
-		FromSelect(baseQuery, "test").
-		PlaceholderFormat(sq.Dollar).
+	baseQuery, args, err := sq.Select(
+		"society_id").
+		From("society_members").
+		Where(sq.Eq{"user_uuid": uuid}).
+		Where("society_id = ANY(?)", pq.Array(society)).
 		ToSql()
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	err = r.connection.Get(&count, countQuery, args...)
+	rows, err := r.connection.QueryContext(ctx, baseQuery, args...)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
-	return count, nil
+	defer rows.Close()
+
+	for rows.Next() {
+		var uuid string
+		err = rows.Scan(&uuid)
+		if err != nil {
+			return nil, err
+		}
+		result[uuid] = true
+	}
+	return result, nil
 }

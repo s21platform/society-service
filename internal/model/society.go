@@ -32,7 +32,7 @@ type SocietyWithOffsetData struct {
 	Name        string `db:"name"`
 	PhotoURL    string `db:"photo_url"`
 	IsMember    bool   `db:"is_member"`
-	IsPrivate   bool   `db:"is_private"`
+	FormatId    int64  `db:"is_private"`
 }
 
 type WithOffsetData struct {

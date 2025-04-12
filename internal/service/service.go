@@ -156,28 +156,51 @@ func (s *Server) UpdateSociety(ctx context.Context, in *society.UpdateSocietyIn)
 }
 
 func (s *Server) GetSocietyWithOffset(ctx context.Context, in *society.GetSocietyWithOffsetIn) (*society.GetSocietyWithOffsetOut, error) {
+	logger := logger_lib.FromContext(ctx, config.KeyLogger)
+	logger.AddFuncName("GetSocietyWithOffset")
+
 	uuid, ok := ctx.Value(config.KeyUUID).(string)
 	if !ok {
 		return nil, status.Error(codes.Internal, "uuid not found in context")
 	}
 
+	if in.Limit < 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid limit: limit < 0")
+	}
+
+	if in.Offset < 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid offset: offset < 0")
+	}
 	withOffsetData := model.WithOffsetData{
 		Limit:  in.Limit,
 		Offset: in.Offset,
 		Name:   in.Name,
 		Uuid:   uuid,
 	}
-	data, err := s.dbR.GetSocietyWithOffset(&withOffsetData)
+
+	data, err := s.dbR.GetSocietyWithOffset(ctx, &withOffsetData)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get society with offset: %v", err)
+		logger.Error("failed to GetSocietyWithOffset from BD")
 	}
-	count, err := s.dbR.GetCountSocietyWithOffset(&withOffsetData)
+	if len(*data) < 1 {
+		return nil, status.Error(codes.NotFound, "not found")
+	}
+
+	socityUuid := make([]string, len(*data))
+	for i, j := range *data {
+		socityUuid[i] = j.SocietyUUID
+	}
+	memberOfSociety, err := s.dbR.GetMemberOfSocieties(ctx, socityUuid)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get count society with offset: %v", err)
+		logger.Error("failed to GetMemberOfSocieties from BD")
+	}
+
+	for _, j := range *data {
+		j.IsMember = memberOfSociety[j.SocietyUUID]
 	}
 	out := society.GetSocietyWithOffsetOut{
 		Societies: make([]*society.Society, len(*data)),
-		Total:     count,
+		Total:     int64(len(*data)),
 	}
 	for j, i := range *data {
 		level := &society.Society{
@@ -185,10 +208,10 @@ func (s *Server) GetSocietyWithOffset(ctx context.Context, in *society.GetSociet
 			Name:        i.Name,
 			PhotoURL:    i.PhotoURL,
 			IsMember:    i.IsMember,
-			IsPrivate:   i.IsPrivate,
+			FormatId:    i.FormatId,
 		}
 		out.Societies[j] = level
 	}
 
-	return &out, err
+	return &out, nil
 }
