@@ -16,6 +16,5 @@ type DbRepo interface {
 	GetTags(ctx context.Context, societyUUID string) ([]int64, error)
 	CountSubscribe(ctx context.Context, societyUUID string) (int64, error)
 	GetSocietyWithOffset(ctx context.Context, data *model.WithOffsetData) (*[]model.SocietyWithOffsetData, error)
-	GetCountSocietyWithOffset(data *model.WithOffsetData) (int64, error)
 	GetMemberOfSocieties(ctx context.Context, data []string) (map[string]bool, error)
 }

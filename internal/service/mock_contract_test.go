@@ -66,6 +66,21 @@ func (mr *MockDbRepoMockRecorder) CreateSociety(ctx, socData interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSociety", reflect.TypeOf((*MockDbRepo)(nil).CreateSociety), ctx, socData)
 }
 
+// GetMemberOfSocieties mocks base method.
+func (m *MockDbRepo) GetMemberOfSocieties(ctx context.Context, data []string) (map[string]bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMemberOfSocieties", ctx, data)
+	ret0, _ := ret[0].(map[string]bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMemberOfSocieties indicates an expected call of GetMemberOfSocieties.
+func (mr *MockDbRepoMockRecorder) GetMemberOfSocieties(ctx, data interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMemberOfSocieties", reflect.TypeOf((*MockDbRepo)(nil).GetMemberOfSocieties), ctx, data)
+}
+
 // GetSocietyInfo mocks base method.
 func (m *MockDbRepo) GetSocietyInfo(ctx context.Context, societyUUID string) (*model.SocietyInfo, error) {
 	m.ctrl.T.Helper()
@@ -79,6 +94,21 @@ func (m *MockDbRepo) GetSocietyInfo(ctx context.Context, societyUUID string) (*m
 func (mr *MockDbRepoMockRecorder) GetSocietyInfo(ctx, societyUUID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSocietyInfo", reflect.TypeOf((*MockDbRepo)(nil).GetSocietyInfo), ctx, societyUUID)
+}
+
+// GetSocietyWithOffset mocks base method.
+func (m *MockDbRepo) GetSocietyWithOffset(ctx context.Context, data *model.WithOffsetData) (*[]model.SocietyWithOffsetData, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSocietyWithOffset", ctx, data)
+	ret0, _ := ret[0].(*[]model.SocietyWithOffsetData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSocietyWithOffset indicates an expected call of GetSocietyWithOffset.
+func (mr *MockDbRepoMockRecorder) GetSocietyWithOffset(ctx, data interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSocietyWithOffset", reflect.TypeOf((*MockDbRepo)(nil).GetSocietyWithOffset), ctx, data)
 }
 
 // GetTags mocks base method.
@@ -123,34 +153,4 @@ func (m *MockDbRepo) UpdateSociety(ctx context.Context, societyData *society_pro
 func (mr *MockDbRepoMockRecorder) UpdateSociety(ctx, societyData interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSociety", reflect.TypeOf((*MockDbRepo)(nil).UpdateSociety), ctx, societyData)
-}
-
-// GetCountSocietyWithOffset mocks base method.
-func (m *MockDbRepo) GetCountSocietyWithOffset(data *model.WithOffsetData) (int64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCountSocietyWithOffset", data)
-	ret0, _ := ret[0].(int64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetCountSocietyWithOffset indicates an expected call of GetCountSocietyWithOffset.
-func (mr *MockDbRepoMockRecorder) GetCountSocietyWithOffset(data interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCountSocietyWithOffset", reflect.TypeOf((*MockDbRepo)(nil).GetCountSocietyWithOffset), data)
-}
-
-// GetSocietyWithOffset mocks base method.
-func (m *MockDbRepo) GetSocietyWithOffset(data *model.WithOffsetData) (*[]model.SocietyWithOffsetData, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSocietyWithOffset", data)
-	ret0, _ := ret[0].(*[]model.SocietyWithOffsetData)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSocietyWithOffset indicates an expected call of GetSocietyWithOffset.
-func (mr *MockDbRepoMockRecorder) GetSocietyWithOffset(data interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSocietyWithOffset", reflect.TypeOf((*MockDbRepo)(nil).GetSocietyWithOffset), data)
 }

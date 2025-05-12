@@ -179,14 +179,17 @@ func (s *Server) GetSocietyWithOffset(ctx context.Context, in *society.GetSociet
 
 	uuid, ok := ctx.Value(config.KeyUUID).(string)
 	if !ok {
+		logger.Error("failed to not found UUID in context")
 		return nil, status.Error(codes.Internal, "uuid not found in context")
 	}
 
 	if in.Limit < 0 {
+		logger.Error("invalid limit: limit < 0")
 		return nil, status.Error(codes.InvalidArgument, "invalid limit: limit < 0")
 	}
 
 	if in.Offset < 0 {
+		logger.Error("invalid offset: offset < 0")
 		return nil, status.Error(codes.InvalidArgument, "invalid offset: offset < 0")
 	}
 	withOffsetData := model.WithOffsetData{
@@ -200,6 +203,7 @@ func (s *Server) GetSocietyWithOffset(ctx context.Context, in *society.GetSociet
 	if err != nil {
 		logger.Error("failed to GetSocietyWithOffset from BD")
 	}
+
 	if len(*data) < 1 {
 		return nil, status.Error(codes.NotFound, "not found")
 	}
