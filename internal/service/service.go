@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+
 	logger_lib "github.com/s21platform/logger-lib"
 
 	society "github.com/s21platform/society-proto/society-proto"

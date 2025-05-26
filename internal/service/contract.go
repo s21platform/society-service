@@ -3,6 +3,7 @@ package service
 
 import (
 	"context"
+
 	"github.com/jmoiron/sqlx"
 
 	society "github.com/s21platform/society-proto/society-proto"
