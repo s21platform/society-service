@@ -199,25 +199,28 @@ func (s *Server) RemoveSociety(ctx context.Context, in *society.RemoveSocietyIn)
 		logger.Error("failed to begin transaction")
 		return nil, status.Error(codes.Internal, "failed to start transaction")
 	}
-	defer tx.Rollback()
 
 	err = s.dbR.RemoveSocietyHasTagsEntry(ctx, in.SocietyUUID, tx)
 	if err != nil {
+		_ = tx.Rollback()
 		logger.Error("failed to RemoveSocietyHasTagsEntry from BD")
 		return nil, err
 	}
 	err = s.dbR.RemoveMembersRequestEntry(ctx, in.SocietyUUID, tx)
 	if err != nil {
+		_ = tx.Rollback()
 		logger.Error("failed to RemoveMembersRequestEntry from BD")
 		return nil, err
 	}
 	err = s.dbR.RemoveSocietyMembersEntry(ctx, in.SocietyUUID, tx)
 	if err != nil {
+		_ = tx.Rollback()
 		logger.Error("failed to RemoveSocietyMembersEntry from BD")
 		return nil, err
 	}
 	err = s.dbR.RemoveSociety(ctx, in.SocietyUUID, tx)
 	if err != nil {
+		_ = tx.Rollback()
 		logger.Error("failed to RemoveSociety from BD")
 		return nil, err
 	}
