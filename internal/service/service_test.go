@@ -6,6 +6,10 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/jmoiron/sqlx"
+	"github.com/stretchr/testify/require"
+
 	"github.com/s21platform/society-service/internal/model"
 
 	logger_lib "github.com/s21platform/logger-lib"
@@ -377,4 +381,70 @@ func TestServer_UpdateSociety(t *testing.T) {
 		assert.Error(t, err)
 		assert.Equal(t, expectedError, err)
 	})
+}
+
+func TestServer_RemoveSociety(t *testing.T) {
+	t.Parallel()
+
+	db, driverMock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+	sqlxDB := sqlx.NewDb(db, "postgres")
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockDBRepo := NewMockDbRepo(ctrl)
+	mockLogger := logger_lib.NewMockLoggerInterface(ctrl)
+
+	s := &Server{dbR: mockDBRepo}
+
+	societyUUID := "soc-123"
+	userUUID := "user-abc"
+	in := &society.RemoveSocietyIn{SocietyUUID: societyUUID}
+
+	ctx := context.WithValue(context.Background(), config.KeyUUID, userUUID)
+	ctx = context.WithValue(ctx, config.KeyLogger, mockLogger)
+
+	driverMock.ExpectBegin()  // sqlxDB.Beginx()
+	driverMock.ExpectCommit() // tx.Commit()
+
+	mockLogger.EXPECT().AddFuncName("RemoveSociety")
+
+	mockDBRepo.
+		EXPECT().
+		GetOwner(ctx, societyUUID).
+		Return(userUUID, nil)
+
+	mockDBRepo.
+		EXPECT().
+		Conn().
+		Return(sqlxDB)
+
+	mockDBRepo.
+		EXPECT().
+		RemoveSocietyHasTagsEntry(ctx, societyUUID, gomock.Any()).
+		Return(nil)
+
+	mockDBRepo.
+		EXPECT().
+		RemoveSociety(ctx, societyUUID, gomock.Any()).
+		Return(nil)
+
+	mockDBRepo.
+		EXPECT().
+		RemoveMembersRequestEntry(ctx, societyUUID, gomock.Any()).
+		Return(nil)
+
+	mockDBRepo.
+		EXPECT().
+		RemoveSocietyMembersEntry(ctx, societyUUID, gomock.Any()).
+		Return(nil)
+
+	out, err := s.RemoveSociety(ctx, in)
+
+	assert.NoError(t, err)
+	assert.Equal(t, &society.EmptySociety{}, out)
+
+	require.NoError(t, driverMock.ExpectationsWereMet())
 }

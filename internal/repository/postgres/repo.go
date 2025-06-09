@@ -33,6 +33,10 @@ func connect(cfg *config.Config) (*Repository, error) {
 	}, nil
 }
 
+func (r *Repository) Conn() *sqlx.DB {
+	return r.connection
+}
+
 func New(cfg *config.Config) (*Repository, error) {
 	var err error
 	var repo *Repository
@@ -206,4 +210,92 @@ func (r *Repository) IsOwnerAdminModerator(ctx context.Context, peerUUID, societ
 	}
 
 	return result.Role, nil
+}
+
+func (r *Repository) RemoveSocietyHasTagsEntry(ctx context.Context, societyUUID string, tx *sqlx.Tx) error {
+	query, args, err := sq.Update("society_has_tags").
+		Set("is_active", false).
+		Where(sq.Eq{"society_id": societyUUID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to build SQL query: %w", err)
+	}
+
+	_, err = tx.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to execute query RemoveSocietyHasTagsEntry: %w", err)
+	}
+
+	return nil
+}
+
+func (r *Repository) RemoveMembersRequestEntry(ctx context.Context, societyUUID string, tx *sqlx.Tx) error {
+	query, args, err := sq.Delete("members_requests").
+		Where(sq.Eq{"society_id": societyUUID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to build SQL query: %w", err)
+	}
+
+	_, err = tx.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to execute query RemoveMembersRequestEntry: %w", err)
+	}
+
+	return nil
+}
+
+func (r *Repository) RemoveSocietyMembersEntry(ctx context.Context, societyUUID string, tx *sqlx.Tx) error {
+	query, args, err := sq.Delete("society_members").
+		Where("society_id = ?", societyUUID).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to build SQL query: %w", err)
+	}
+
+	_, err = tx.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to execute query RemoveMembersRequestEntry: %w", err)
+	}
+
+	return nil
+}
+
+func (r *Repository) RemoveSociety(ctx context.Context, societyUUID string, tx *sqlx.Tx) error {
+	query, args, err := sq.Delete("society").
+		Where("id = ?", societyUUID).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to build SQL query: %w", err)
+	}
+
+	_, err = tx.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to execute query RemoveMembersRequestEntry: %w", err)
+	}
+
+	return nil
+}
+
+func (r *Repository) GetOwner(ctx context.Context, societyId string) (string, error) {
+	query, args, err := sq.Select("owner_uuid").
+		From("society").
+		Where(sq.Eq{"id": societyId}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return "", fmt.Errorf("failed to build SQL query: %w", err)
+	}
+
+	var owner string
+	err = sqlx.GetContext(ctx, r.connection, &owner, query, args...)
+	if err != nil {
+		return "", fmt.Errorf("failed to execute query GetOwner: %w", err)
+	}
+
+	return owner, nil
 }
