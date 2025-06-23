@@ -26,4 +26,6 @@ type DbRepo interface {
 	GetFormatSociety(ctx context.Context, societyUUID string) (int, error)
 	AddMembersRequests(ctx context.Context, uuid string, societyUUID string) error
 	AddSocietyMembers(ctx context.Context, uuid string, societyUUID string) error
+	GetRoleSocietyMembers(ctx context.Context, uuid string, societyUUID string) (int, error)
+	UnSubscribeToSociety(ctx context.Context, uuid string, societyUUID string) error
 }
