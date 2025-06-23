@@ -37,6 +37,34 @@ func (m *MockDbRepo) EXPECT() *MockDbRepoMockRecorder {
 	return m.recorder
 }
 
+// AddMembersRequests mocks base method.
+func (m *MockDbRepo) AddMembersRequests(ctx context.Context, uuid, societyUUID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddMembersRequests", ctx, uuid, societyUUID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddMembersRequests indicates an expected call of AddMembersRequests.
+func (mr *MockDbRepoMockRecorder) AddMembersRequests(ctx, uuid, societyUUID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddMembersRequests", reflect.TypeOf((*MockDbRepo)(nil).AddMembersRequests), ctx, uuid, societyUUID)
+}
+
+// AddSocietyMembers mocks base method.
+func (m *MockDbRepo) AddSocietyMembers(ctx context.Context, uuid, societyUUID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddSocietyMembers", ctx, uuid, societyUUID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddSocietyMembers indicates an expected call of AddSocietyMembers.
+func (mr *MockDbRepoMockRecorder) AddSocietyMembers(ctx, uuid, societyUUID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddSocietyMembers", reflect.TypeOf((*MockDbRepo)(nil).AddSocietyMembers), ctx, uuid, societyUUID)
+}
+
 // Conn mocks base method.
 func (m *MockDbRepo) Conn() *sqlx.DB {
 	m.ctrl.T.Helper()
@@ -79,6 +107,21 @@ func (m *MockDbRepo) CreateSociety(ctx context.Context, socData *model.SocietyDa
 func (mr *MockDbRepoMockRecorder) CreateSociety(ctx, socData interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSociety", reflect.TypeOf((*MockDbRepo)(nil).CreateSociety), ctx, socData)
+}
+
+// GetFormatSociety mocks base method.
+func (m *MockDbRepo) GetFormatSociety(ctx context.Context, societyUUID string) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFormatSociety", ctx, societyUUID)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFormatSociety indicates an expected call of GetFormatSociety.
+func (mr *MockDbRepoMockRecorder) GetFormatSociety(ctx, societyUUID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFormatSociety", reflect.TypeOf((*MockDbRepo)(nil).GetFormatSociety), ctx, societyUUID)
 }
 
 // GetOwner mocks base method.

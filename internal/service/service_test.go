@@ -448,3 +448,97 @@ func TestServer_RemoveSociety(t *testing.T) {
 
 	require.NoError(t, driverMock.ExpectationsWereMet())
 }
+
+func TestServer_SubscribeToSociety(t *testing.T) {
+	t.Parallel()
+
+	db, driverMock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+	sqlxDB := sqlx.NewDb(db, "postgres")
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockDBRepo := NewMockDbRepo(ctrl)
+	mockLogger := logger_lib.NewMockLoggerInterface(ctrl)
+
+	s := &Server{dbR: mockDBRepo}
+
+	societyUUID := "soc-abc"
+	userUUID := "user-xyz"
+	in := &society.SubscribeToSocietyIn{SocietyUUID: societyUUID}
+
+	ctx := context.WithValue(context.Background(), config.KeyUUID, userUUID)
+	ctx = context.WithValue(ctx, config.KeyLogger, mockLogger)
+
+	// Успешный кейс: формат == 1 → AddSocietyMembers
+	t.Run("success: format == 1", func(t *testing.T) {
+		mockLogger.EXPECT().AddFuncName("SubscribeToSociety")
+		mockDBRepo.EXPECT().GetFormatSociety(ctx, societyUUID).Return(1, nil)
+		mockDBRepo.EXPECT().AddSocietyMembers(ctx, userUUID, societyUUID).Return(nil)
+
+		out, err := s.SubscribeToSociety(ctx, in)
+		assert.NoError(t, err)
+		assert.Equal(t, &society.EmptySociety{}, out)
+	})
+
+	// Успешный кейс: формат != 1 → AddMembersRequests
+	t.Run("success: format != 1", func(t *testing.T) {
+		mockLogger.EXPECT().AddFuncName("SubscribeToSociety")
+		mockDBRepo.EXPECT().GetFormatSociety(ctx, societyUUID).Return(2, nil)
+		mockDBRepo.EXPECT().AddMembersRequests(ctx, userUUID, societyUUID).Return(nil)
+
+		out, err := s.SubscribeToSociety(ctx, in)
+		assert.NoError(t, err)
+		assert.Equal(t, &society.EmptySociety{}, out)
+	})
+
+	// Ошибка: uuid отсутствует в context
+	t.Run("fail: missing uuid", func(t *testing.T) {
+		badCtx := context.WithValue(context.Background(), config.KeyLogger, mockLogger)
+
+		mockLogger.EXPECT().AddFuncName("SubscribeToSociety")
+		mockLogger.EXPECT().Error("failed to not found UUID in context")
+
+		out, err := s.SubscribeToSociety(badCtx, in)
+		assert.Nil(t, out)
+		assert.ErrorContains(t, err, "uuid not found in context")
+	})
+
+	// Ошибка в GetFormatSociety
+	t.Run("fail: GetFormatSociety error", func(t *testing.T) {
+		mockLogger.EXPECT().AddFuncName("SubscribeToSociety")
+		mockDBRepo.EXPECT().GetFormatSociety(ctx, societyUUID).Return(0, errors.New("format error"))
+		mockLogger.EXPECT().Error("failed to GetFormatSociety from BD")
+
+		out, err := s.SubscribeToSociety(ctx, in)
+		assert.Nil(t, out)
+		assert.ErrorContains(t, err, "format error")
+	})
+
+	// Ошибка в AddMembersRequests
+	t.Run("fail: AddMembersRequests error", func(t *testing.T) {
+		mockLogger.EXPECT().AddFuncName("SubscribeToSociety")
+		mockDBRepo.EXPECT().GetFormatSociety(ctx, societyUUID).Return(2, nil)
+		mockDBRepo.EXPECT().AddMembersRequests(ctx, userUUID, societyUUID).Return(errors.New("add req error"))
+		mockLogger.EXPECT().Error("failed to AddMembersRequests from BD")
+
+		out, err := s.SubscribeToSociety(ctx, in)
+		assert.Nil(t, out)
+		assert.ErrorContains(t, err, "add req error")
+	})
+
+	// Ошибка в AddSocietyMembers
+	t.Run("fail: AddSocietyMembers error", func(t *testing.T) {
+		mockLogger.EXPECT().AddFuncName("SubscribeToSociety")
+		mockDBRepo.EXPECT().GetFormatSociety(ctx, societyUUID).Return(1, nil)
+		mockDBRepo.EXPECT().AddSocietyMembers(ctx, userUUID, societyUUID).Return(errors.New("add mem error"))
+		mockLogger.EXPECT().Error("failed to AddSocietyMembers from BD")
+
+		out, err := s.SubscribeToSociety(ctx, in)
+		assert.Nil(t, out)
+		assert.ErrorContains(t, err, "add mem error")
+	})
+	_, _ = sqlxDB, driverMock
+}

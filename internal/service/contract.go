@@ -23,4 +23,7 @@ type DbRepo interface {
 	RemoveSocietyMembersEntry(ctx context.Context, societyUUID string, tx *sqlx.Tx) error
 	RemoveSociety(ctx context.Context, societyUUID string, tx *sqlx.Tx) error
 	GetOwner(ctx context.Context, societyId string) (string, error)
+	GetFormatSociety(ctx context.Context, societyUUID string) (int, error)
+	AddMembersRequests(ctx context.Context, uuid string, societyUUID string) error
+	AddSocietyMembers(ctx context.Context, uuid string, societyUUID string) error
 }
