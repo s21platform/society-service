@@ -352,3 +352,38 @@ func (r *Repository) AddSocietyMembers(ctx context.Context, uuid string, society
 
 	return nil
 }
+
+func (r *Repository) GetRoleSocietyMembers(ctx context.Context, uuid string, societyUUID string) (int, error) {
+	query, args, err := sq.Select("role").
+		From("society_members").
+		Where(sq.Eq{"society_id": societyUUID, "user_uuid": uuid}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return 0, fmt.Errorf("failed to build SQL query: %w", err)
+	}
+
+	var role int
+	err = sqlx.GetContext(ctx, r.connection, &role, query, args...)
+	if err != nil {
+		return 0, fmt.Errorf("failed to execute query GetRoleSocietyMembers: %w", err)
+	}
+
+	return role, nil
+}
+
+func (r *Repository) UnSubscribeToSociety(ctx context.Context, uuid string, societyUUID string) error {
+	query, args, err := sq.Delete("society_members").
+		Where(sq.Eq{"society_id": societyUUID, "user_uuid": uuid}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to build SQL query: %w", err)
+	}
+
+	_, err = r.connection.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to execute query RemoveMembersRequestEntry: %w", err)
+	}
+	return err
+}

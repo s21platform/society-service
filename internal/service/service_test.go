@@ -542,3 +542,90 @@ func TestServer_SubscribeToSociety(t *testing.T) {
 	})
 	_, _ = sqlxDB, driverMock
 }
+
+func TestServer_UnSubscribeToSociety(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockDBRepo := NewMockDbRepo(ctrl)
+	mockLogger := logger_lib.NewMockLoggerInterface(ctrl)
+
+	s := &Server{dbR: mockDBRepo}
+
+	userUUID := "user-abc"
+	societyUUID := "soc-123"
+	ctx := context.WithValue(context.Background(), config.KeyUUID, userUUID)
+	ctx = context.WithValue(ctx, config.KeyLogger, mockLogger)
+
+	in := &society.UnSubscribeToSocietyIn{SocietyUUID: societyUUID}
+
+	t.Run("success", func(t *testing.T) {
+		mockLogger.EXPECT().AddFuncName("UnSubscribeToSociety")
+
+		mockDBRepo.
+			EXPECT().
+			GetRoleSocietyMembers(gomock.Any(), userUUID, societyUUID).
+			Return(1, nil)
+
+		mockDBRepo.
+			EXPECT().
+			UnSubscribeToSociety(gomock.Any(), userUUID, societyUUID).
+			Return(nil)
+
+		out, err := s.UnSubscribeToSociety(ctx, in)
+
+		assert.NoError(t, err)
+		assert.Equal(t, &society.EmptySociety{}, out)
+	})
+
+	t.Run("uuid not in context", func(t *testing.T) {
+		ctxWithoutUUID := context.WithValue(context.Background(), config.KeyLogger, mockLogger)
+
+		mockLogger.EXPECT().AddFuncName("UnSubscribeToSociety")
+		mockLogger.EXPECT().Error("failed to not found UUID in context")
+
+		out, err := s.UnSubscribeToSociety(ctxWithoutUUID, in)
+
+		assert.Nil(t, out)
+		assert.ErrorContains(t, err, "uuid not found in context")
+	})
+
+	t.Run("GetRoleSocietyMembers returns error", func(t *testing.T) {
+		mockLogger.EXPECT().AddFuncName("UnSubscribeToSociety")
+
+		mockDBRepo.
+			EXPECT().
+			GetRoleSocietyMembers(gomock.Any(), userUUID, societyUUID).
+			Return(0, errors.New("role fetch error"))
+
+		mockLogger.EXPECT().Error("failed to GetRoleSocietyMembers from BD")
+
+		out, err := s.UnSubscribeToSociety(ctx, in)
+
+		assert.Nil(t, out)
+		assert.ErrorContains(t, err, "role fetch error")
+	})
+
+	t.Run("UnSubscribeToSociety returns error", func(t *testing.T) {
+		mockLogger.EXPECT().AddFuncName("UnSubscribeToSociety")
+
+		mockDBRepo.
+			EXPECT().
+			GetRoleSocietyMembers(gomock.Any(), userUUID, societyUUID).
+			Return(1, nil)
+
+		mockDBRepo.
+			EXPECT().
+			UnSubscribeToSociety(gomock.Any(), userUUID, societyUUID).
+			Return(errors.New("unsubscribe error"))
+
+		mockLogger.EXPECT().Error("failed to UnSubscribeToSociety from BD")
+
+		out, err := s.UnSubscribeToSociety(ctx, in)
+
+		assert.Nil(t, out)
+		assert.ErrorContains(t, err, "unsubscribe error")
+	})
+}

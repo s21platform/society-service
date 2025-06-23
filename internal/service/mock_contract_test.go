@@ -139,6 +139,21 @@ func (mr *MockDbRepoMockRecorder) GetOwner(ctx, societyId interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOwner", reflect.TypeOf((*MockDbRepo)(nil).GetOwner), ctx, societyId)
 }
 
+// GetRoleSocietyMembers mocks base method.
+func (m *MockDbRepo) GetRoleSocietyMembers(ctx context.Context, uuid, societyUUID string) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRoleSocietyMembers", ctx, uuid, societyUUID)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRoleSocietyMembers indicates an expected call of GetRoleSocietyMembers.
+func (mr *MockDbRepoMockRecorder) GetRoleSocietyMembers(ctx, uuid, societyUUID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRoleSocietyMembers", reflect.TypeOf((*MockDbRepo)(nil).GetRoleSocietyMembers), ctx, uuid, societyUUID)
+}
+
 // GetSocietyInfo mocks base method.
 func (m *MockDbRepo) GetSocietyInfo(ctx context.Context, societyUUID string) (*model.SocietyInfo, error) {
 	m.ctrl.T.Helper()
@@ -238,6 +253,20 @@ func (m *MockDbRepo) RemoveSocietyMembersEntry(ctx context.Context, societyUUID 
 func (mr *MockDbRepoMockRecorder) RemoveSocietyMembersEntry(ctx, societyUUID, tx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveSocietyMembersEntry", reflect.TypeOf((*MockDbRepo)(nil).RemoveSocietyMembersEntry), ctx, societyUUID, tx)
+}
+
+// UnSubscribeToSociety mocks base method.
+func (m *MockDbRepo) UnSubscribeToSociety(ctx context.Context, uuid, societyUUID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UnSubscribeToSociety", ctx, uuid, societyUUID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UnSubscribeToSociety indicates an expected call of UnSubscribeToSociety.
+func (mr *MockDbRepoMockRecorder) UnSubscribeToSociety(ctx, uuid, societyUUID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnSubscribeToSociety", reflect.TypeOf((*MockDbRepo)(nil).UnSubscribeToSociety), ctx, uuid, societyUUID)
 }
 
 // UpdateSociety mocks base method.

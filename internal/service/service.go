@@ -266,6 +266,30 @@ func (s *Server) SubscribeToSociety(ctx context.Context, in *society.SubscribeTo
 	return &society.EmptySociety{}, nil
 }
 
+func (s *Server) UnSubscribeToSociety(ctx context.Context, in *society.UnSubscribeToSocietyIn) (*society.EmptySociety, error) {
+	logger := logger_lib.FromContext(ctx, config.KeyLogger)
+	logger.AddFuncName("UnSubscribeToSociety")
+
+	uuid, ok := ctx.Value(config.KeyUUID).(string)
+	if !ok {
+		logger.Error("failed to not found UUID in context")
+		return nil, status.Error(codes.Internal, "uuid not found in context")
+	}
+
+	_, err := s.dbR.GetRoleSocietyMembers(ctx, uuid, in.SocietyUUID)
+	if err != nil {
+		logger.Error("failed to GetRoleSocietyMembers from BD")
+		return nil, err
+	}
+	err = s.dbR.UnSubscribeToSociety(ctx, uuid, in.SocietyUUID)
+	if err != nil {
+		logger.Error("failed to UnSubscribeToSociety from BD")
+		return nil, err
+	}
+
+	return &society.EmptySociety{}, nil
+}
+
 //func (s *Server) GetSocietyWithOffset(ctx context.Context, in *society.GetSocietyWithOffsetIn) (*society.GetSocietyWithOffsetOut, error) {
 //	uuid, ok := ctx.Value(config.KeyUUID).(string)
 //	if !ok {
