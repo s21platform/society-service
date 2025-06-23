@@ -233,6 +233,39 @@ func (s *Server) RemoveSociety(ctx context.Context, in *society.RemoveSocietyIn)
 	return &society.EmptySociety{}, nil
 }
 
+func (s *Server) SubscribeToSociety(ctx context.Context, in *society.SubscribeToSocietyIn) (*society.EmptySociety, error) {
+	logger := logger_lib.FromContext(ctx, config.KeyLogger)
+	logger.AddFuncName("SubscribeToSociety")
+
+	uuid, ok := ctx.Value(config.KeyUUID).(string)
+	if !ok {
+		logger.Error("failed to not found UUID in context")
+		return nil, status.Error(codes.Internal, "uuid not found in context")
+	}
+
+	format, err := s.dbR.GetFormatSociety(ctx, in.SocietyUUID)
+	if err != nil {
+		logger.Error("failed to GetFormatSociety from BD")
+		return nil, err
+	}
+
+	if format != 1 {
+		err = s.dbR.AddMembersRequests(ctx, uuid, in.SocietyUUID)
+		if err != nil {
+			logger.Error("failed to AddMembersRequests from BD")
+			return nil, err
+		}
+	} else {
+		err = s.dbR.AddSocietyMembers(ctx, uuid, in.SocietyUUID)
+		if err != nil {
+			logger.Error("failed to AddSocietyMembers from BD")
+			return nil, err
+		}
+	}
+
+	return &society.EmptySociety{}, nil
+}
+
 //func (s *Server) GetSocietyWithOffset(ctx context.Context, in *society.GetSocietyWithOffsetIn) (*society.GetSocietyWithOffsetOut, error) {
 //	uuid, ok := ctx.Value(config.KeyUUID).(string)
 //	if !ok {

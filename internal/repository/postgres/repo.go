@@ -299,3 +299,56 @@ func (r *Repository) GetOwner(ctx context.Context, societyId string) (string, er
 
 	return owner, nil
 }
+
+func (r *Repository) GetFormatSociety(ctx context.Context, societyUUID string) (int, error) {
+	query, args, err := sq.Select("format_id").
+		From("society").
+		Where(sq.Eq{"id": societyUUID}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return 0, fmt.Errorf("failed to build SQL query: %w", err)
+	}
+	var role int
+	err = sqlx.GetContext(ctx, r.connection, &role, query, args...)
+	if err != nil {
+		return 0, fmt.Errorf("failed to execute query GetFormatSociety: %w", err)
+	}
+	return role, nil
+}
+
+func (r *Repository) AddMembersRequests(ctx context.Context, uuid string, societyUUID string) error {
+	query, args, err := sq.Insert("members_requests").
+		Columns("user_uuid", "society_id", "status_id").
+		Values(uuid, societyUUID, 1).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to build add_members_requests insert query: %w", err)
+	}
+
+	_, err = r.connection.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to insert add_members_requests: %w", err)
+	}
+
+	return nil
+}
+
+func (r *Repository) AddSocietyMembers(ctx context.Context, uuid string, societyUUID string) error {
+	query, args, err := sq.Insert("society_members").
+		Columns("society_id", "user_uuid", "role").
+		Values(societyUUID, uuid, 1).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to build add_society_members insert query: %w", err)
+	}
+
+	_, err = r.connection.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to insert add_society_members: %w", err)
+	}
+
+	return nil
+}
