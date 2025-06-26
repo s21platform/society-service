@@ -28,4 +28,6 @@ type DbRepo interface {
 	AddSocietyMembers(ctx context.Context, uuid string, societyUUID string) error
 	GetRoleSocietyMembers(ctx context.Context, uuid string, societyUUID string) (int, error)
 	UnSubscribeToSociety(ctx context.Context, uuid string, societyUUID string) error
+	GetUserSocieties(ctx context.Context, limit uint64, offset uint64, userUUID string) ([]string, error)
+	GetInfoSociety(ctx context.Context, groups []string) ([]model.SocietyWithOffsetData, error)
 }

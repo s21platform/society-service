@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -627,5 +628,132 @@ func TestServer_UnSubscribeToSociety(t *testing.T) {
 
 		assert.Nil(t, out)
 		assert.ErrorContains(t, err, "unsubscribe error")
+	})
+}
+
+func TestGetSocietyForUserWithOffset(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockDBRepo := NewMockDbRepo(ctrl)
+	mockLogger := logger_lib.NewMockLoggerInterface(ctrl)
+	s := &Server{dbR: mockDBRepo}
+
+	userUUID := "user-123"
+	ctx := context.WithValue(context.Background(), config.KeyUUID, userUUID)
+	ctx = context.WithValue(ctx, config.KeyLogger, mockLogger)
+
+	t.Run("UUID missing in context", func(t *testing.T) {
+		ctx := context.WithValue(context.Background(), config.KeyLogger, mockLogger)
+		in := &society.GetSocietyForUserWithOffsetIn{Offset: 0, Limit: 10}
+
+		mockLogger.EXPECT().AddFuncName("GetSocietyForUserWithOffset")
+		mockLogger.EXPECT().Error("failed to not found UUID in context")
+
+		_, err := s.GetSocietyForUserWithOffset(ctx, in)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "uuid not found in context")
+	})
+
+	t.Run("Invalid offset or limit", func(t *testing.T) {
+		ctx := context.WithValue(context.Background(), config.KeyUUID, userUUID)
+		ctx = context.WithValue(ctx, config.KeyLogger, mockLogger)
+		in := &society.GetSocietyForUserWithOffsetIn{Offset: -1, Limit: -10}
+
+		mockLogger.EXPECT().AddFuncName("GetSocietyForUserWithOffset")
+		mockLogger.EXPECT().Error(gomock.Any()).Do(func(msg string) {
+			assert.Contains(t, msg, "invalid value")
+		})
+
+		_, err := s.GetSocietyForUserWithOffset(ctx, in)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid value")
+	})
+
+	t.Run("GetUserSocieties returns error", func(t *testing.T) {
+		in := &society.GetSocietyForUserWithOffsetIn{
+			UserUUID: userUUID,
+			Offset:   0,
+			Limit:    10,
+		}
+		mockLogger.EXPECT().AddFuncName("GetSocietyForUserWithOffset")
+		mockDBRepo.
+			EXPECT().
+			GetUserSocieties(gomock.Any(), uint64(10), uint64(0), userUUID).
+			Return(nil, fmt.Errorf("db error"))
+		mockLogger.EXPECT().Error("failed to GetUserSocieties from BD")
+
+		_, err := s.GetSocietyForUserWithOffset(ctx, in)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "db error")
+	})
+
+	t.Run("GetInfoSociety returns error", func(t *testing.T) {
+		in := &society.GetSocietyForUserWithOffsetIn{
+			UserUUID: userUUID,
+			Offset:   0,
+			Limit:    10,
+		}
+		groups := []string{"soc-1"}
+		mockLogger.EXPECT().AddFuncName("GetSocietyForUserWithOffset")
+		mockDBRepo.
+			EXPECT().
+			GetUserSocieties(gomock.Any(), uint64(10), uint64(0), userUUID).
+			Return(groups, nil)
+
+		mockDBRepo.
+			EXPECT().
+			GetInfoSociety(gomock.Any(), groups).
+			Return(nil, fmt.Errorf("info error"))
+
+		mockLogger.EXPECT().Error("failed to GetInfoSociety from BD")
+
+		_, err := s.GetSocietyForUserWithOffset(ctx, in)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "info error")
+	})
+
+	t.Run("Success", func(t *testing.T) {
+		in := &society.GetSocietyForUserWithOffsetIn{
+			UserUUID: userUUID,
+			Offset:   0,
+			Limit:    10,
+		}
+		groups := []string{"soc-1", "soc-2"}
+		infoGroup := []model.SocietyWithOffsetData{
+			{
+				SocietyUUID: "soc-1",
+				Name:        "Alpha",
+				PhotoURL:    "http://url1",
+				FormatId:    1,
+			},
+			{
+				SocietyUUID: "soc-2",
+				Name:        "Beta",
+				PhotoURL:    "http://url2",
+				FormatId:    2,
+			},
+		}
+
+		mockLogger.EXPECT().AddFuncName("GetSocietyForUserWithOffset")
+
+		mockDBRepo.
+			EXPECT().
+			GetUserSocieties(gomock.Any(), uint64(10), uint64(0), userUUID).
+			Return(groups, nil)
+
+		mockDBRepo.
+			EXPECT().
+			GetInfoSociety(gomock.Any(), groups).
+			Return(infoGroup, nil)
+
+		out, err := s.GetSocietyForUserWithOffset(ctx, in)
+		assert.NoError(t, err)
+		assert.Len(t, out.Societies, 2)
+		assert.Equal(t, "Alpha", out.Societies[0].Name)
+		assert.True(t, out.Societies[0].IsMember)
+		assert.Equal(t, int64(2), out.Total)
 	})
 }

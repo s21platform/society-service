@@ -23,6 +23,26 @@ type SocietyInfo struct {
 	CanEditSociety bool           `db:"-"`
 }
 
+type SocietyWithOffset struct {
+	Society []SocietyWithOffsetData
+	Total   int64
+}
+
+type SocietyWithOffsetData struct {
+	SocietyUUID string `db:"id"`
+	Name        string `db:"name"`
+	PhotoURL    string `db:"photo_url"`
+	IsMember    bool   `db:"is_member"`
+	FormatId    int64  `db:"format_id"`
+}
+
+type WithOffsetData struct {
+	Limit  int64
+	Offset int64
+	Name   string
+	Uuid   string
+}
+
 type Role struct {
 	Role int `db:"role"`
 }

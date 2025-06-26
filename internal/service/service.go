@@ -290,6 +290,52 @@ func (s *Server) UnSubscribeToSociety(ctx context.Context, in *society.UnSubscri
 	return &society.EmptySociety{}, nil
 }
 
+func (s *Server) GetSocietyForUserWithOffset(ctx context.Context, in *society.GetSocietyForUserWithOffsetIn) (*society.GetSocietyForUserWithOffsetOut, error) {
+	logger := logger_lib.FromContext(ctx, config.KeyLogger)
+	logger.AddFuncName("GetSocietyForUserWithOffset")
+
+	uuid, ok := ctx.Value(config.KeyUUID).(string)
+	_ = uuid
+	if !ok {
+		logger.Error("failed to not found UUID in context")
+		return nil, status.Error(codes.Internal, "uuid not found in context")
+	}
+
+	if in.Offset < 0 || in.Limit < 0 {
+		logger.Error(fmt.Sprintf("invalid value: must be >= 0, got offset = %d, limit = %d", in.Offset, in.Limit))
+		return nil, status.Errorf(codes.InvalidArgument, "invalid value: must be >= 0, got offset = %d, limit = %d", in.Offset, in.Limit)
+	}
+
+	groups, err := s.dbR.GetUserSocieties(ctx, uint64(in.Limit), uint64(in.Offset), in.UserUUID)
+	if err != nil {
+		logger.Error("failed to GetUserSocieties from BD")
+		return nil, err
+	}
+
+	infoGroup, err := s.dbR.GetInfoSociety(ctx, groups)
+	if err != nil {
+		logger.Error("failed to GetInfoSociety from BD")
+		return nil, err
+	}
+
+	out := society.GetSocietyForUserWithOffsetOut{
+		Societies: make([]*society.Society, len(infoGroup)),
+		Total:     int64(len(infoGroup)),
+	}
+	for i := 0; i < len(infoGroup); i++ {
+		tmp := &society.Society{
+			SocietyUUID: infoGroup[i].SocietyUUID,
+			Name:        infoGroup[i].Name,
+			PhotoURL:    infoGroup[i].PhotoURL,
+			IsMember:    true,
+			FormatId:    infoGroup[i].FormatId,
+		}
+		out.Societies[i] = tmp
+	}
+
+	return &out, nil
+}
+
 //func (s *Server) GetSocietyWithOffset(ctx context.Context, in *society.GetSocietyWithOffsetIn) (*society.GetSocietyWithOffsetOut, error) {
 //	uuid, ok := ctx.Value(config.KeyUUID).(string)
 //	if !ok {
