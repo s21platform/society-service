@@ -383,7 +383,47 @@ func (r *Repository) UnSubscribeToSociety(ctx context.Context, uuid string, soci
 
 	_, err = r.connection.ExecContext(ctx, query, args...)
 	if err != nil {
-		return fmt.Errorf("failed to execute query RemoveMembersRequestEntry: %w", err)
+		return fmt.Errorf("failed to execute query UnSubscribeToSociety: %w", err)
 	}
-	return err
+	return nil
+}
+
+func (r *Repository) GetUserSocieties(ctx context.Context, limit uint64, offset uint64, userUUID string) ([]string, error) {
+	query, args, err := sq.Select("society_id").
+		From("society_members").
+		Where(sq.Eq{"user_uuid": userUUID}).
+		Limit(limit).
+		Offset(offset).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build SQL query: %w", err)
+	}
+
+	var groups []string
+	err = r.connection.SelectContext(ctx, &groups, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute query GetUserSocieties: %w", err)
+	}
+
+	return groups, nil
+}
+
+func (r *Repository) GetInfoSociety(ctx context.Context, groups []string) ([]model.SocietyWithOffsetData, error) {
+	query, args, err := sq.Select("id", "name", "photo_url", "format_id").
+		From("society").
+		Where(sq.Eq{"id": groups}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build SQL query: %w", err)
+	}
+
+	var data []model.SocietyWithOffsetData
+	err = r.connection.SelectContext(ctx, &data, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute query GetInfoSociety: %w", err)
+	}
+
+	return data, nil
 }
