@@ -124,6 +124,21 @@ func (mr *MockDbRepoMockRecorder) GetFormatSociety(ctx, societyUUID interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFormatSociety", reflect.TypeOf((*MockDbRepo)(nil).GetFormatSociety), ctx, societyUUID)
 }
 
+// GetInfoSociety mocks base method.
+func (m *MockDbRepo) GetInfoSociety(ctx context.Context, groups []string) ([]model.SocietyWithOffsetData, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetInfoSociety", ctx, groups)
+	ret0, _ := ret[0].([]model.SocietyWithOffsetData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetInfoSociety indicates an expected call of GetInfoSociety.
+func (mr *MockDbRepoMockRecorder) GetInfoSociety(ctx, groups interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetInfoSociety", reflect.TypeOf((*MockDbRepo)(nil).GetInfoSociety), ctx, groups)
+}
+
 // GetOwner mocks base method.
 func (m *MockDbRepo) GetOwner(ctx context.Context, societyId string) (string, error) {
 	m.ctrl.T.Helper()
@@ -182,6 +197,21 @@ func (m *MockDbRepo) GetTags(ctx context.Context, societyUUID string) ([]int64, 
 func (mr *MockDbRepoMockRecorder) GetTags(ctx, societyUUID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTags", reflect.TypeOf((*MockDbRepo)(nil).GetTags), ctx, societyUUID)
+}
+
+// GetUserSocieties mocks base method.
+func (m *MockDbRepo) GetUserSocieties(ctx context.Context, limit, offset uint64, userUUID string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserSocieties", ctx, limit, offset, userUUID)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserSocieties indicates an expected call of GetUserSocieties.
+func (mr *MockDbRepoMockRecorder) GetUserSocieties(ctx, limit, offset, userUUID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserSocieties", reflect.TypeOf((*MockDbRepo)(nil).GetUserSocieties), ctx, limit, offset, userUUID)
 }
 
 // IsOwnerAdminModerator mocks base method.
